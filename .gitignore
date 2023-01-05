@@ -4,3 +4,8 @@ build_macos.sh
 output.wav
 plot-wavetable-tool.py
 super-wavexe
+.DS_Store
+a.out
+mmml-compiler
+input.mmml
+wavexe-mmml-data.h

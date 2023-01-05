@@ -6,15 +6,35 @@
 *                Basically, just FM (to keep it conceptually
 *                simple), but with cool hyperbolic functions
 *                for saw-ish waves.
+*
 *  DATE:         21st August 2022
 **************************************************************/
 
 #define TOTAL_ALGORITHMS  3
-#define TOTAL_DIVISORS    7                                  // total divisors for synthesis
-#define TOTAL_WAVECYCLES  TOTAL_DIVISORS * TOTAL_ALGORITHMS  // reminder: up to 255 possible
-#define WAVECYCLE_SIZE    1024                               // immutable (for now)
-#define WAVECYCLE_HALF    (WAVECYCLE_SIZE / 2)               // saves dividing it in the code
-#define PI                3.1415                             // an accurate enough pi
+#define TOTAL_DIVISORS    7                                 // total divisors for synthesis
+#define TOTAL_WAVECYCLES  TOTAL_DIVISORS * TOTAL_ALGORITHMS // reminder: up to 255 possible
+#define WAVECYCLE_SIZE    1024                              // immutable (for now)
+#define WAVECYCLE_HALF    (WAVECYCLE_SIZE / 2)              // saves dividing it in the code
+
+float noise()
+{
+	#define NOISE_UPDATE_RATE 2000
+
+	static uint16_t update = NOISE_UPDATE_RATE;
+	static uint16_t lfsr   = 1;
+	static uint16_t bit;
+	static float    output;
+
+	if (update-- == 0)
+	{
+		bit    = ((lfsr >> 0) ^ (lfsr >> 2) ^ (lfsr >> 3) ^ (lfsr >> 5)) & 1;
+		lfsr   = (lfsr >> 1) | (bit << 15);
+		output = ((lfsr % 200) / 200.0) - 0.5;
+		update = NOISE_UPDATE_RATE;
+	}
+
+	return output;
+}
 
 static float divisors [TOTAL_DIVISORS * 2] =
 {
@@ -42,6 +62,9 @@ float operator_function(input, function)
 		case 2: // hypersine wave operator
 			output = sinh(PI * (input - WAVECYCLE_HALF) / WAVECYCLE_HALF);
 			break;
+		case 3: // silence
+			output = 0;
+			break;
 	}
 	return output;
 }
@@ -60,7 +83,7 @@ void generate_wavecycles(float *input_wavecycle_array)
 		current_algorithm = i / TOTAL_DIVISORS;
 
 		for (uint16_t w = 0; w < WAVECYCLE_SIZE; w++)
-			input_wavecycle_array [w + WAVECYCLE_SIZE * i] = (operator_function(w, current_algorithm) * cos(PI * (w - WAVECYCLE_HALF) / (WAVECYCLE_HALF/divisors[(i % TOTAL_DIVISORS)*2]))) * cos(PI * (w - WAVECYCLE_HALF) / (WAVECYCLE_HALF/divisors[((i % TOTAL_DIVISORS)*2)+1]));
+			input_wavecycle_array [w + WAVECYCLE_SIZE * i] = (operator_function(w, current_algorithm) * cos(PI * (w - WAVECYCLE_HALF) / (WAVECYCLE_HALF / divisors[(i % TOTAL_DIVISORS)*2]))) * cos(PI * (w - WAVECYCLE_HALF) / (WAVECYCLE_HALF / divisors[((i % TOTAL_DIVISORS)*2)+1]));
 
 		/*=========================*/
 		/* wavecycle normalization */
@@ -69,6 +92,7 @@ void generate_wavecycles(float *input_wavecycle_array)
 		float peak_value    = 0;
 		float current_value = 0;
 
+		// get peak value
 		for (uint16_t w = 0; w < WAVECYCLE_SIZE; w++)
 		{
 			current_value = input_wavecycle_array[w + WAVECYCLE_SIZE * i];
@@ -76,6 +100,8 @@ void generate_wavecycles(float *input_wavecycle_array)
 			if (fabs(current_value) > peak_value)
 				peak_value = current_value;
 		}
+
+		// scale values between -1.0 and 1.0
 		for (uint16_t w = 0; w < WAVECYCLE_SIZE; w++)
 			input_wavecycle_array[w + WAVECYCLE_SIZE * i] = map(input_wavecycle_array[w + WAVECYCLE_SIZE * i], -peak_value, peak_value, -1.0, 1.0);
 	}

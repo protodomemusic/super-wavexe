@@ -1,12 +1,12 @@
 /**************************************************************
-*  FILENAME:     simple-filter.h
+*  FILENAME:     simple-filter.c
 *  DESCRIPTION:  Simple resonant high/low-pass filters, adapted
 *                from Beam Myself Into The Future's code:
 *                https://beammyselfintothefuture.wordpress.com/
 *                I spent ages looking for simple, but decent,
 *                filter code and theirs was both the simplest,
 *                and best, I came across. Thanks BMITF!
-* DATE:          3rd May 2022
+*  DATE:         3rd May 2022
 **************************************************************/
 
 #define LPF 0
@@ -15,7 +15,7 @@
 float last_input  [TOTAL_CHANNELS];
 float last_output [TOTAL_CHANNELS];
 float momentum    [TOTAL_CHANNELS];
- 
+
 float resonant_LPF (float input, float cutoff, float resonance, uint8_t channel)
 {
 	// Lower resonance values increases resonance
