@@ -199,40 +199,22 @@ void mmml(float pitch_io[], float volume_io[], uint8_t instrument_io[], uint8_t 
 				// note value
 				if (buffer1 != 0 && buffer1 < 14)
 				{
-					// NOTE! I quickly changed the behaviour of ties so that it will update the note pitch
-					// it probably needs some looking at, so don't forget.
+					// set the note and pitch
+					mmml_note[v] = buffer1;
+					pitch_io [v] = notes[(mmml_note[v]+(mmml_octave[v]*12)) + mmml_transpose[v] + MASTER_TRANSPOSE];
 
-					// trigger the oscillators
-					if (v < TOTAL_VOICES)
+					// assuming the last channel is a drum
+					// remove if you don't want this behavior
+					if (v == TOTAL_VOICES - 1)
+						pitch_io [v] = mmml_note[v];
+
+					if (mmml_tie_flag[v] == 0)
 					{
-						mmml_note[v] = buffer1;
+						// reset the note properties by triggering a note on event
+						note_on_io[v] = 1;
 
-						if (mmml_tie_flag[v] == 0)
-						{
-							// reset the lfo
-
-							// update the instrument bank originally here
-						}
-
-						pitch_io[v] = notes[(mmml_note[v]+(mmml_octave[v]*12)) + mmml_transpose[v] + MASTER_TRANSPOSE];
-
-						if (mmml_tie_flag[v] == 0)
-						{							
-							// reset the note properties by triggering a note on event
-							note_on_io[v] = 1;
-
-							// update the oscillator volume
-							volume_io[v] = mmml_volume[v];
-
-							// if (env_vol_type[v] == 0)
-							// 	volume_io[v] = mmml_volume[v];
-							// else
-							// 	volume_io[v] = 0.0;
-
-							// reset the volume decay envelope speed
-
-							// update wavetable originally here
-						}
+						// update the oscillator volume
+						volume_io[v] = mmml_volume[v];
 					}
 
 					if (mmml_tie_flag[v] == 1)
@@ -241,15 +223,8 @@ void mmml(float pitch_io[], float volume_io[], uint8_t instrument_io[], uint8_t 
 				// rest
 				else
 				{
-					// trigger the oscillators
-					if (v < TOTAL_VOICES)
-					{
-						// update the instrument bank originally here
-						
-						// avoid clicky note-offs by turning on the decay envelope
-						note_on_io[v] = 2;
-						
-					}
+					// avoid clicky note-offs by turning on a release envelope
+					note_on_io[v] = 2;
 
 					// clear tie flag here too
 					mmml_tie_flag[v] = 0;
