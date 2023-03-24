@@ -40,40 +40,51 @@ float noise(float pitch)
 }
 
 // definitions for the drum parameters
-#define TOTAL_DRUM_SOUNDS             5
-#define TOTAL_DRUM_SOUND_PARAMETERS   6
+#define TOTAL_DRUM_SOUNDS             10
+#define TOTAL_DRUM_SOUND_PARAMETERS   7
 
 // how long (in milliseconds) each drum sample will last
-#define DRUM_LENGTH     800
+#define DRUM_LENGTH     1000
 #define DRUM_PITCH      4
 // the total size (in samples) of each drum sound (roughly 140KB)
-#define DRUM_DATA_SIZE        ((SAMPLE_RATE/1000) * DRUM_LENGTH) / DRUM_PITCH
+#define DRUM_DATA_SIZE        (SAMPLE_RATE/1000) * DRUM_LENGTH
 #define TOTAL_DRUM_DATA_SIZE  DRUM_DATA_SIZE * TOTAL_DRUM_SOUNDS
 
 // store drum sound parameters as tiny 8-bit numbers 
 uint8_t drum_sounds [TOTAL_DRUM_SOUNDS][TOTAL_DRUM_SOUND_PARAMETERS] = 
 {
-//---------------------------------------//
-//     oscillator/wave      |    noise   //
-//--------------| <------ decays ------> //
-//    wav | frq | vol | ptc | vol |  ptc //
-//---------------------------------------//
-// 0: kick                  |
-   {     1,   70,   25,  240,  230,  255 },
-// 1: snare                 |
-   {     4,   16,   15,   80,   18,   20 },
-// 2: closed hi-hat         |
-   {    10,  255,  120,    0,   30,    0 },
-// 3: open hi-hat           |
-   {    10,  255,  120,    0,    4,    0 },
-// 4: tom                   |
-   {     1,   70,    9,   24,  230,  255 },
-//---------------------------------------//
+//-----------------------------------------------//
+//     oscillator/wave      |    noise   | boost //
+//--------------| <------ decays ------> |       //
+//    wav | frq | vol | ptc | vol |  ptc |       //
+//-----------------------------------------------//
+// 0: c  kick               |            |
+   {     1,   70,   25,  240,  230,   255,  180   },
+// 1: c+ snare long         |            |
+   {     4,   16,   15,   80,   18,    20,  220   },
+// 2: d  snare short        |            |
+   {     4,   26,   80,   50,   50,   200,  200   },
+// 3: d+ closed hi-hat      |            |
+   {    10,  255,  120,    0,   30,     0,  127   },
+// 3: d+ pedal hi-hat       |            |
+   {    10,  255,  100,    0,   20,     0,  127   },
+// 4: e  open hi-hat        |            |
+   {    10,  255,   20,    1,    5,     1,  127   },
+// 5: f  tom high           |            |
+   {     1,  100,    9,   24,  230,   255,  180   },
+// 6: f+ tom medium         |            |
+   {     1,   70,    9,   24,  230,   255,  180   },
+// 7: g  tom low            |            |
+   {     1,   50,    9,   24,  230,   255,  180   },
+// 8: g+ kick/snare hit     |            |
+   {     1,   80,   25,  240,    5,     2,  220   },
+//-----------------------------------------------//
 };
 
 // generate a bunch of drums and put in memory
 void drum_generator(float *input_drum_data, float *input_wavecycle_array)
 {
+	// oscillator variables
 	float    wave_sample;
 	float    wave_pitch;
 	float    wave_pitch_decay;
@@ -83,12 +94,14 @@ void drum_generator(float *input_drum_data, float *input_wavecycle_array)
 	float    wave_output;
 	uint16_t wave_shape;
 
+	// noise variables
 	float noise_pitch;
 	float noise_pitch_decay;
 	float noise_volume_decay;
 	float noise_volume;
 	float noise_output;
 
+	float drum_boost;
 	float final_output;
 
 	uint16_t fx_timer = FX_UPDATE_RATE;
@@ -110,8 +123,9 @@ void drum_generator(float *input_drum_data, float *input_wavecycle_array)
 		wave_pitch_decay   = map(drum_sounds[d][3], 0, 255,  0.001,   1.0);
 		noise_volume_decay = map(drum_sounds[d][4], 0, 255,  0.001,  0.04);
 		noise_pitch_decay  = map(drum_sounds[d][5], 0, 255, 0.0001,   1.0);
+		drum_boost         = map(drum_sounds[d][6], 0, 255,    0.0,   2.0);
 
-		for (int s = 0; s < DRUM_DATA_SIZE * DRUM_PITCH; ++s)
+		for (int s = 0; s < DRUM_DATA_SIZE; ++s)
 		{
 			// start with noise
 			noise_output = noise(noise_pitch) * quart_smooth(noise_volume);
@@ -146,7 +160,7 @@ void drum_generator(float *input_drum_data, float *input_wavecycle_array)
 			final_output = (wave_output + noise_output) / 2;
 
 			// add a little EQ notch to make snare a bit punchier
-			final_output = final_output + (resonant_LPF(final_output, 0.003, 0.02, 0) / 2);
+			final_output = (final_output + (resonant_LPF(final_output, 0.003, 0.01, 0) / 2)) * drum_boost;
 
 			// save sample to drum data
 			if (s % DRUM_PITCH == 0)

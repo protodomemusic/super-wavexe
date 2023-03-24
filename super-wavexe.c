@@ -12,10 +12,7 @@
 *                https://github.com/protodomemusic/mmml
 *
 *                TO DO NEXT:
-*                - Per-channel FX
-*                - Noise/percussion
 *                - Vibrato/sweeps/portamento
-*                - Actually use the filter
 *                - Compile time is sllooowww, time to optimize
 *
 *  AUTHOR:       Blake 'PROTODOME' Troise
@@ -30,15 +27,16 @@
 #include <stdint.h>
 #include <math.h>
 #include <time.h>
+#include <string.h>
 
 // note: definitions here required by wave-export.c
-#define PLAY_TIME      10     // duration of recording in seconds
+#define PLAY_TIME      30     // duration of recording in seconds
 #define SAMPLE_RATE    44100  // cd quality audio
 #define TOTAL_CHANNELS 2      // stereo file
 #define TOTAL_SAMPLES  (PLAY_TIME * TOTAL_CHANNELS) * SAMPLE_RATE
 
 // the voice we're using for the drums (behaves slightly differently)
-#define DRUM_VOICE     TOTAL_VOICES - 1
+#define DRUM_VOICE TOTAL_VOICES - 1
 
 // math stuff
 #define PI 3.1415 // an accurate enough pi
@@ -49,16 +47,31 @@ float map(float x, float in_min, float in_max, float out_min, float out_max)
 	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
-// nice little S-curve generator, makes a linear input (0.0 - 1.0) non-linear
+// foldback distortion by ed.bpu@eriflleh
+// created: 2005-05-28 19:11:06
+// borrowed from https://www.musicdsp.org/en/latest/
+float foldback(float input, float threshold)
+{
+	if (input > threshold || input <- threshold)
+		input = fabs(fabs(fmod(input - threshold, threshold * 4)) - threshold * 2) - threshold;
+	return input;
+}
+
+// nice little curve generator, makes a linear input (0.0 - 1.0) non-linear
 // works on one side of the waveform for timbral interest
 // I've found that having some DC wobble makes the waveforms sound a little
-// more natural
-float tan_smooth(float input)
+// more natural.
+// Adjust the amount of variation with the "strength" parameter.
+float tan_smooth(float input, float strength)
 {
 	// requires cleanup at 0.0 and 1.0 as the algorithm isn't quite perfect
-	if (input > 1.0 && input < 1.0)
-		return (tanh(PI * (input - 0.5) / 0.5) / 2) + 0.5;
-	else
+	if (input > 0.0 && input < 1.0)
+	{
+		float x = (input - 0.5) / 0.5;
+		float y = tanh(PI * x) / 2 + 0.5;
+		float variation = sin(PI * input) * strength;
+		return y + variation;
+	}
 		return input;
 }
 
@@ -85,138 +98,178 @@ float quart_smooth(float input)
 }
 
 // important definitions
-#define MASTER_GAIN    1700  // convert -1.0 - 1.0 float to 16-bit
+#define MASTER_GAIN    5700  // convert -1.0 - 1.0 float to 16-bit
 #define DITHER_GAIN    5     // volume of dither noise
 #define OSC_DIVISOR    100   // change this to alter master tuning
 #define TOTAL_VOICES   4     // how many oscillators (plus drum channel) we're calculating
 #define FX_UPDATE_RATE 100   // how many frames before we update the FX parameters
+#define LPF_HIGH       0.5   // the maximum height of the filter
 
 // externals
 #include "simple-filter.c"
 #include "wave-export.c"
 #include "wave-data.h"
 #include "mmml.c"
+#include "freeverb.c"
+#include "simple-delay.c"
 
 // oscillator variables
-double   osc_accumulator   [TOTAL_VOICES];
-float    osc_pitch         [TOTAL_VOICES];
-float    osc_volume        [TOTAL_VOICES];
-float    osc_target_volume [TOTAL_VOICES];
-uint8_t  osc_instrument    [TOTAL_VOICES];
-uint8_t  osc_note_on       [TOTAL_VOICES];
-uint8_t  osc_note_off      [TOTAL_VOICES];
-uint8_t  osc_wave_mod      [TOTAL_VOICES];
-float    osc_decay         [TOTAL_VOICES];
+float    osc_decay;
 
 // wavetable variables
-uint8_t  osc_sample_1      [TOTAL_VOICES];
-uint8_t  osc_sample_2      [TOTAL_VOICES];
-uint8_t  osc_sample_3      [TOTAL_VOICES];
-float    osc_wavetable     [TOTAL_VOICES][WAVECYCLE_SIZE];
+uint8_t  osc_sample_1;
+uint8_t  osc_sample_2;
+uint8_t  osc_sample_3;
+float    osc_wavetable_l [WAVECYCLE_SIZE];
+float    osc_wavetable_r [WAVECYCLE_SIZE];
 
 // wavetable sample mixes
-float    osc_mix_1         [TOTAL_VOICES];
-float    osc_mix_2         [TOTAL_VOICES];
-float    osc_mix_1_rate    [TOTAL_VOICES];
-float    osc_mix_2_rate    [TOTAL_VOICES];
+float    osc_mix_1_rate;
+float    osc_mix_2_rate;
+float    osc_mix_3_rate;
 
-// output waveform smoothing mix
-float    osc_mix_3         [TOTAL_VOICES];
+float    stereo_effect;
+float    osc_lpf_state;
+float    osc_lpf_speed;
+float    osc_lpf_q;
 
-// filter variables
-float    osc_lpf_position  [TOTAL_VOICES];
-float    osc_lpf_target    [TOTAL_VOICES];
+float    osc_distortion;
 
 // lfo variables
-double   lfo_accumulator   [TOTAL_VOICES];
-float    lfo_pitch         [TOTAL_VOICES];
-float    lfo_volume        [TOTAL_VOICES];
+double   lfo_accumulator;
+float    lfo_pitch;
+float    lfo_volume;
 
 // drum variables
-uint32_t drum_accumulator  = DRUM_DATA_SIZE;
+uint32_t drum_accumulator = DRUM_DATA_SIZE;
 uint8_t  current_drum_sample;
 
-#define TOTAL_INSTRUMENTS     8
-#define INSTRUMENT_PARAMETERS 7
+#define TOTAL_INSTRUMENTS     9
+#define INSTRUMENT_PARAMETERS 11
 
 static uint8_t instrument_bank [TOTAL_INSTRUMENTS][INSTRUMENT_PARAMETERS] =
 {
-//---------------------------------------------------------------------------------------//
-//    waveform    /**/   wav mix   /**/  decay  /**/ 
-//---------------------------------------------------------------------------------------//
-// 0:
-   {  0,  0,  0,  /**/   50,   80, /**/   255,  /**/  10 },
-// 1:
-   {  1,  1,  1,  /**/   50,   80, /**/   250,  /**/  10 },
-// 2:
-   {  2,  2,  2,  /**/   50,   80, /**/   250,  /**/  10 },
-// 3:
-   {  3,  3,  3,  /**/   50,   80, /**/   250,  /**/  10 },
-// 4:
-   {  4,  4,  4,  /**/   50,   80, /**/   250,  /**/  10 },
-// 5:
-   {  5,  5,  5,  /**/   50,   80, /**/   250,  /**/  10 },
-// 6:
-   {  6,  6,  6,  /**/   50,   80, /**/   250,  /**/  10 },
-// 7:
-   {  7,  7,  7,  /**/   50,   80, /**/   250,  /**/  10 },
-//---------------------------------------------------------------------------------------//
+//--------------------------------------------------------------------------//
+//   waveform  |   wave mix  | decay | tan smooth fx |   low pass   | fldbk |
+//   1 | 2 | 3 | 1->2 | 2->3 | speed | speed | stereo| speed |   Q  | dstrn |
+//-------------|-------------|-------|---------------|----------------------|
+// 0: squishy saw            |       |               |              |       |
+   {  7,  8,  9,   155,   225,    200,      1,    100,     60,   255,      0,},
+// 1: glassy e-piano         |       |               |              |       |
+   {  6, 10,  0,   100,   200,    200,     10,     90,    240,   200,      0,},
+// 2: music box              |       |               |              |       |
+   {  6,  0,  0,     1,   220,    100,      1,     10,      0,     0,      0,},
+// 3: frog guitar            |       |               |              |       |
+   {  3,  1,  0,   200,   252,    190,    210,     10,     60,   100,      0,},
+// 4: gritty bass            |       |               |              |       |
+   {  0,  0,  3,     1,   252,    190,    255,     10,      0,     0,    200,},
+// 5: funky rhodes           |       |               |              |       |
+   {  3,  1,  0,   110,    20,    180,    255,     90,    240,   200,      0,},
+// 6: xylophonic organ       |       |               |              |       |
+   { 11,  0,  0,    40,    20,    120,    220,    120,      0,     0,      0,},
+// 7: portasound keys        |       |               |              |       |
+   {  5, 10,  0,     0,   190,    170,    230,    100,     10,   180,      0,},
+// 8: soft rhodes            |       |               |              |       |
+   {  0,  0,  0,   110,    20,    130,    255,     90,      0,     0,    135,},
+//--------------------------------------------------------------------------//
 };
 
 // allows for balancing of voices
 static float voice_boost [TOTAL_VOICES] =
 {
 //---------------------//
-// <---- osc ----> drm //
-//---------------------//
-//  #1   #2   #3   #4  //
-//---------------------//
-   0.2, 0.2, 0.2, 1.0
+//  <--- osc --->| drm //
+//  #1 | #2 | #3 | #4  //
+//-----|----|----|-----//
+    0.4, 0.4, 0.4, 1.0
 //---------------------//
 };
 
-void configure_instrument(uint8_t voice, uint8_t instrument_id)
+#define TOTAL_REVERB_PRESETS     5
+#define TOTAL_REVERB_PARAMETERS  5
+
+uint8_t reverb_bank [TOTAL_REVERB_PRESETS][TOTAL_REVERB_PARAMETERS] =
+{
+//---------------------------------------//
+//   width |  dry |  wet | damp | room  |//
+//----------------|------|------|-------|//
+// 0: no reverb   |      |      |       |
+	{     0,   100,     0,     0,     0  },
+// 1: a dusting   |      |      |       |
+	{   150,   100,    15,    10,    10  },
+// 2: a little space     |      |       |
+	{   150,   100,    15,    50,    30  },
+// 3: roomy       |      |      |       |
+	{   200,   100,    20,    60,    80  },
+// 4: spacious    |      |      |       |
+	{   200,   100,    40,   100,    80  },
+//----------------------------------------//
+};
+
+#define TOTAL_DELAY_PRESETS     5
+#define TOTAL_DELAY_PARAMETERS  5
+
+uint8_t delay_bank [TOTAL_DELAY_PRESETS][TOTAL_DELAY_PARAMETERS] =
+{
+//-----------------------------------------------//
+//  offset | feedbk | spread | dirctn |   mix  | //
+//---------|--------|--------|--------|--------|-//
+// 0: no delay      |        |        |        |
+	{     0,       0,       0,       0,       0  },
+// 1: super subtle delay left         |        |
+	{   140,      99,      20,       1,       8  },
+// 2: super subtle delay right        |        |
+	{   140,      99,      20,       0,       8  },
+// 3: classic stereo echo    |        |        |
+	{   255,      40,      80,       0,      40  },
+// 4: huge delay    |        |        |        |
+	{   255,      99,      20,       1,      50  },
+//-----------------------------------------------//
+};
+
+#define TOTAL_FX 2
+
+uint8_t channel_fx [TOTAL_VOICES][TOTAL_FX] =
+{
+//----------------//
+// reverb | delay //
+//----------------//
+// voice #0
+	{   2,    1  },
+// voice #1
+	{   2,    2  },
+// voice #2
+	{   0,    0  },
+// voice #3
+	{   1,    0  },
+//----------------//
+};
+
+void configure_instrument(uint8_t instrument_id)
 {
 	// waveform
-	osc_sample_1 [voice] = instrument_bank[instrument_id][0];
-	osc_sample_2 [voice] = instrument_bank[instrument_id][1];
-	osc_sample_3 [voice] = instrument_bank[instrument_id][2];
+	osc_sample_1   = instrument_bank[instrument_id][0];
+	osc_sample_2   = instrument_bank[instrument_id][1];
+	osc_sample_3   = instrument_bank[instrument_id][2];
 
 	// waveform transition speed
-	osc_mix_1_rate [voice] = map(instrument_bank[instrument_id][3], 0, 255, 0.05, 0.0001);
-	osc_mix_2_rate [voice] = map(instrument_bank[instrument_id][4], 0, 255, 0.01, 0.0001);
+	osc_mix_1_rate = cube_smooth(map(instrument_bank[instrument_id][3], 0, 255, 0.1,  0.0001));
+	osc_mix_2_rate = cube_smooth(map(instrument_bank[instrument_id][4], 0, 255, 0.1,  0.0001));
 
 	// decay rate
-	osc_decay [voice] = map(instrument_bank[instrument_id][5], 0, 255, 0.05, 0.0001);
-}
+	osc_decay      = cube_smooth(map(instrument_bank[instrument_id][5], 0, 255, 0.05, 0.0001));
 
-void update_wavetable(float *input_wavecycles, uint8_t voice, int8_t sample_1, int8_t sample_2, int8_t sample_3, float volume, float mix_1, float mix_2, float mix_3)
-{
-	// let's update the voice's wavetable
-	float output;
+	// tan smoothing
+	osc_mix_3_rate = cube_smooth(map(instrument_bank[instrument_id][6], 0, 255, 0.1,  0.0001));
+	stereo_effect  = cube_smooth(map(instrument_bank[instrument_id][7], 0, 255, 0.0,  1.0));
 
-	for (int16_t i = 0; i < WAVECYCLE_SIZE; i++)
-	{
-		// read sample 1
-		output = input_wavecycles[(i + (sample_1 * WAVECYCLE_SIZE))];
+	// low pass filter
+	osc_lpf_state  = 0.01;
+	osc_lpf_speed  = map(instrument_bank[instrument_id][8], 0, 255, 0.00001, 0.01);
+	osc_lpf_q      = map(instrument_bank[instrument_id][9], 0, 255, 0.1, 0.008);
 
-		// merge with sample 2
-		output = map(mix_1, 0.0, 1.0, output, input_wavecycles[(i + (sample_2 * WAVECYCLE_SIZE))]);
-
-		// merge with sample 3
-		output = map(mix_2, 0.0, 1.0, output, input_wavecycles[(i + (sample_3 * WAVECYCLE_SIZE))]);
-
-		// apply volume
-		if (volume > 0.0)
-			output = output * cube_smooth(volume);
-		else
-			output = 0.0;
-
-		// write to table and apply smoothing algorithm to output for a really neat timbral effect
-		osc_wavetable[voice][i] = map(tan_smooth(mix_3), 0.0, 1.0, output, tan_smooth(output));
-
-		//osc_wavetable[voice][i] = output;
-	};
+	// distortion
+	osc_distortion = map(instrument_bank[instrument_id][10], 0, 255, 0.5, 0.1);
 }
 
 int main()
@@ -226,6 +279,9 @@ int main()
 
 	// where we'll put the final float data
 	float *buffer_float = (float*)malloc(TOTAL_SAMPLES * sizeof(float));
+
+	// where we'll put the individual voice data
+	float *voice_buffer = (float*)malloc(TOTAL_SAMPLES * sizeof(float));
 
 	// where we'll put wavecycle data
 	float *wavecycle_data = (float*)malloc(WAVECYCLE_SIZE * (TOTAL_WAVECYCLES + 1) * sizeof(float));
@@ -239,31 +295,27 @@ int main()
 	printf("Building drums...\n");
 	drum_generator(drum_data, wavecycle_data);
 
-	// initialize MMML
-	mmml_setup();
-
 	// fx variables
 	uint16_t fx_timer;
 	uint8_t  fx_update_flag [TOTAL_VOICES];
 
-	// debug data size
-	printf("-------\n");
-	printf("song buffer = %lu bytes\n",TOTAL_SAMPLES * sizeof(float));
-	printf("wavecycle data = %lu bytes\n",WAVECYCLE_SIZE * (TOTAL_WAVECYCLES + 1) * sizeof(float));
-	printf("drum sample data = %lu bytes\n",TOTAL_DRUM_DATA_SIZE * sizeof(float));
-	printf("-------\n");
+	//-------------//
+	// debug stuff //
+	//-------------//
+	uint32_t debug_song_buffer_size    = TOTAL_SAMPLES  * sizeof(float);
+	uint32_t debug_voice_buffer_size   = TOTAL_SAMPLES  * sizeof(float);
+	uint32_t debug_wavecycle_data_size = WAVECYCLE_SIZE * (TOTAL_WAVECYCLES + 1) * sizeof(float);
+	uint32_t debug_drum_data_size      = TOTAL_DRUM_DATA_SIZE * sizeof(float);
+	uint32_t debug_total_memory_usage  = debug_drum_data_size + debug_voice_buffer_size + debug_wavecycle_data_size + debug_drum_data_size;
 
-	// initial parameters
-	for (uint8_t v = 0; v < TOTAL_VOICES; ++v)
-	{
-		configure_instrument(v, 0);
-
-		osc_pitch[v]      = 440;
-		osc_mix_3[v]      = 1.0;
-		osc_lpf_target[v] = 0.001;
-	}
-	
-	fx_timer = FX_UPDATE_RATE;
+	printf("-------\n");
+	printf("song buffer      = %u bytes\n", debug_song_buffer_size);
+	printf("voice buffer     = %u bytes\n", debug_voice_buffer_size);
+	printf("wavecycle data   = %u bytes\n", debug_wavecycle_data_size);
+	printf("drum sample data = %u bytes\n", debug_drum_data_size);
+	printf("total mem usage  = %u bytes\n", debug_total_memory_usage);
+	printf("-------\n");
+	//-------------//
 
 	/*~~~~~~~~~~~~~~~~~~~~~~~*/
 	/*  generate audio file  */
@@ -271,158 +323,291 @@ int main()
 
 	printf("Generating audio...\n");
 
-	for(uint32_t t = 0; t < TOTAL_SAMPLES - 1; t += TOTAL_CHANNELS)
+	for (uint8_t v = 0; v < TOTAL_VOICES; ++v)
 	{
-		/*~~~~~~~~~~~~~~~~~~~~~~*/
-		/*  process wavecycles  */
-		/*~~~~~~~~~~~~~~~~~~~~~~*/
+		printf("Voice #%i (Generation)", v);
 
-		// calculate the samples
-		float current_osc_sample = 0.0;
-		float channel_output     = 0.0;
-		float float_output       = 0.0;
+		// initialize MMML variables
+		mmml_setup(v);
 
-		for (uint8_t v = 0; v < TOTAL_VOICES; ++v)
+		// oscillator variables
+		double   osc_accumulator   = 0;
+		float    osc_pitch         = 0;
+		float    osc_volume        = 0;
+		float    osc_target_volume = 0;
+		uint8_t  osc_instrument    = 0;
+		uint8_t  osc_note_on       = 0;
+		uint8_t  osc_panning       = 0;
+
+		// wavetable sample mixes
+		float    osc_mix_1 = 0;
+		float    osc_mix_2 = 0;
+
+		// output waveform smoothing mix
+		float    osc_mix_3 = 1.0;
+
+		// stereo offset variables
+		float tan_smoothing_l = 0.0;
+		float tan_smoothing_r = 0.0;
+		uint8_t stereo_fx_counter;
+
+		// initial parameters
+		configure_instrument(0);
+		fx_timer = FX_UPDATE_RATE;
+
+		for(uint32_t t = 0; t < TOTAL_SAMPLES - 1; t += TOTAL_CHANNELS)
 		{
+			/*~~~~~~~~~~~~~~~~~~~~~~*/
+			/*  process wavecycles  */
+			/*~~~~~~~~~~~~~~~~~~~~~~*/
+
+			// calculate the samples
+			float current_osc_sample = 0.0;
+			float channel_output_l   = 0.0;
+			float channel_output_r   = 0.0;
+			float float_output_l     = 0.0;
+			float float_output_r     = 0.0;
+
 			if (v < DRUM_VOICE)
 			{
-				current_osc_sample = (osc_accumulator[v] += osc_pitch[v]) / OSC_DIVISOR;
-				channel_output     = osc_wavetable[v][(uint32_t)current_osc_sample % WAVECYCLE_SIZE] * voice_boost[v];
-				float_output      += channel_output;
+				current_osc_sample = (osc_accumulator += osc_pitch) / OSC_DIVISOR;
+				channel_output_l   = osc_wavetable_l[(uint32_t)current_osc_sample % WAVECYCLE_SIZE] * voice_boost[v];
+				channel_output_r   = osc_wavetable_r[(uint32_t)current_osc_sample % WAVECYCLE_SIZE] * voice_boost[v];
+
+				// apply low pass filter
+				if (osc_lpf_q > 0)
+				{
+					channel_output_l = resonant_LPF(channel_output_l, osc_lpf_state, osc_lpf_q + osc_lpf_state, 0);
+					channel_output_r = resonant_LPF(channel_output_l, osc_lpf_state, osc_lpf_q + osc_lpf_state, 1);
+				}
+
+				// apply foldback distortion
+				if (osc_distortion < 0.5)
+				{
+					channel_output_l = foldback(channel_output_l, osc_distortion);
+					channel_output_r = foldback(channel_output_r, osc_distortion);
+				}
+
+				// write the final sample to the output
+				float_output_l += channel_output_l;
+				float_output_r += channel_output_r;
 			}
 			else
+			{
 				if (drum_accumulator < DRUM_DATA_SIZE)
-					float_output += drum_data[drum_accumulator++ + (DRUM_DATA_SIZE * current_drum_sample)] * cube_smooth(osc_target_volume[DRUM_VOICE]) * voice_boost[v];
+				{
+					drum_accumulator++;
+					float_output_l += drum_data[drum_accumulator + (DRUM_DATA_SIZE * current_drum_sample)] * cube_smooth(osc_target_volume) * voice_boost[v];
+					float_output_r += drum_data[drum_accumulator + (DRUM_DATA_SIZE * current_drum_sample)] * cube_smooth(osc_target_volume) * voice_boost[v];
+				}
+			}
 
 			// update waveform if fx has changed...
 			if (fx_update_flag[v] == 1)
 			{
 				// ...and if we're (basically) at a zero crossing
-				if ((channel_output > -0.001 && channel_output < 0.001))
+				if ((channel_output_l > -0.001 && channel_output_l < 0.001) || (channel_output_r > -0.001 && channel_output_r < 0.001))
 				{
-					update_wavetable(wavecycle_data, v, osc_sample_1[v], osc_sample_2[v], osc_sample_3[v], osc_volume[v], osc_mix_1[v], osc_mix_2[v], osc_mix_3[v]);
+					float output = 0.0;
+
+					// let's calculate the panning first
+					float panning_l = 1.0;
+					float panning_r = 1.0;
+
+					float pan_mapped = (((osc_panning / 100.0) + 1) / 2.0) * (PI / 2.0);
+
+					panning_r = sin(pan_mapped);
+					panning_l = cos(pan_mapped);
+
+					for (int16_t i = 0; i < WAVECYCLE_SIZE; i++)
+					{
+						// read sample 1
+						output = wavecycle_data[(i + (osc_sample_1 * WAVECYCLE_SIZE))];
+
+						// merge with sample 2
+						output = map(osc_mix_1, 0.0, 1.0, output, wavecycle_data[(i + (osc_sample_2 * WAVECYCLE_SIZE))]);
+
+						// merge with sample 3
+						output = map(osc_mix_2, 0.0, 1.0, output, wavecycle_data[(i + (osc_sample_3 * WAVECYCLE_SIZE))]);
+
+						// apply volume
+						if (osc_volume > 0.0)
+							output = output * cube_smooth(osc_volume);
+						else
+							output = 0.0;
+
+						// write to table and apply smoothing algorithm to output for a really neat timbral effect
+						osc_wavetable_l [i] = map(cube_smooth(osc_mix_3), 0.0, 1.0, output, tan_smooth(output, tan_smoothing_l)) * panning_l;
+						osc_wavetable_r [i] = map(cube_smooth(osc_mix_3), 0.0, 1.0, output, tan_smooth(output, tan_smoothing_r)) * panning_r;
+					};
+
 					fx_update_flag[v]  = 0;
 				}
 			}
 
-			//float_output += resonant_LPF(osc_wavetable[v][(uint32_t)current_osc_sample % WAVECYCLE_SIZE], osc_lpf_position[v], 0.2, 0);
+			// save to output
+			voice_buffer[t]   = float_output_l;
+			voice_buffer[t+1] = float_output_r;
 
-			// stereo output
-			for (uint8_t i = 0; i < TOTAL_CHANNELS; i++)
-				buffer_float[t+i] = float_output;
-		}
+			/*~~~~~~~~~~~~~~~~~~~~~~~~*/
+			/*  update FX parameters  */
+			/*~~~~~~~~~~~~~~~~~~~~~~~~*/
 
-		/*~~~~~~~~~~~~~~~~~~~~~~~~*/
-		/*  update FX parameters  */
-		/*~~~~~~~~~~~~~~~~~~~~~~~~*/
-
-		if (fx_timer-- == 0)
-		{
-			for (uint8_t v = 0; v < DRUM_VOICE; ++v)
+			if (fx_timer-- == 0)
 			{
-				//==================// 
-				// update envelopes //
-				//==================//
-
-				// if we're at volume, trigger decay
-				if (osc_note_on[v] == 0)
-					osc_note_on[v] = 3;
-				
-				// de-click release envelope
-				if (osc_note_on[v] == 2 && osc_volume[v] > 0.0)
-					osc_volume[v] -= 0.1;
-
-				// decay envelope
-				if (osc_note_on[v] == 3 && osc_volume[v] > 0.0)
-					osc_volume[v] -= osc_decay[v] * osc_target_volume[v]; // compensate for target volume
-
-				// prevent volume from exceeding boundaries
-				if (osc_volume[v] > 1.0)
-					osc_volume[v] = 1.0;
-				else if (osc_volume[v] < 0.0)
-					osc_volume[v] = 0.0;
-
-				/*-~-~-~-~-~-~-~-~-~-*/
-
-				// wavetable envelopes
-				if (osc_mix_1[v] < 1.0)
-					osc_mix_1[v] += osc_mix_1_rate[v];
-
-				if (osc_mix_2[v] < 1.0)
-					osc_mix_2[v] += osc_mix_2_rate[v];
-
-				if (osc_mix_3[v] > 0.0)
-					osc_mix_3[v] -= 0.001;
-
-				/*-~-~-~-~-~-~-~-~-~-*/
-
-				// // update lfos
-				// lfo_output[v] = wavetable_data[(uint8_t)((lfo_accumulator[v] += lfo_pitch[v]) >> 9) + (lfo_waveform[v] * 4)];
-				// lfo_output[v] = (lfo_output[v] * lfo_amplitude[v]) >> 5;
-
-				// // lfo swell / lfo delay
-				// if (lfo_amplitude[v] < (lfo_intensity[v] + 1) && lfo_tick[v] == 0)
-				// {
-				// 	lfo_amplitude[v]++;
-				// 	lfo_tick[v] = lfo_length[v] << 6;
-				// }
-				// else if (lfo_tick[v] > 0)
-				// 	lfo_tick[v]--;
-
-				/*-~-~-~-~-~-~-~-~-~-*/
-
-				// filter envelope
-				if (osc_lpf_position[v] > osc_lpf_target[v])
-					osc_lpf_position[v] -= 0.0002;
-
-				/*-~-~-~-~-~-~-~-~-~-*/
-
-				// check for instrument reset
-				if (osc_note_on[v] == 1)
+				if (v < DRUM_VOICE)
 				{
-					// reset accumulator so we start at a zero crossing
-					osc_accumulator[v] = 0;
+					//==================// 
+					// update envelopes //
+					//==================//
 
-					// reset all the waveform mixes
-					osc_mix_1[v] = 0.0;
-					osc_mix_2[v] = 0.0;
-					osc_mix_3[v] = 1.0;
+					// if we're at volume, trigger decay
+					if (osc_note_on == 0)
+						osc_note_on = 3;
+					
+					// de-click release envelope
+					if (osc_note_on  == 2 && osc_volume > 0.0)
+						osc_volume -= 0.1;
 
-					// do the rest of the stuff
-					osc_volume[v]       = osc_target_volume[v];
-					osc_note_on[v]      = 0;
-					osc_lpf_position[v] = 0.02;
-					configure_instrument(v, osc_instrument[v]);
+					// decay envelope
+					if (osc_note_on  == 3 && osc_volume > 0.0)
+						osc_volume -= osc_decay * osc_target_volume; // compensate for target volume
+
+					// prevent volume from exceeding boundaries
+					if (osc_volume > 1.0)
+						osc_volume = 1.0;
+					else if (osc_volume < 0.0)
+						osc_volume = 0.0;
+
+					/*-~-~-~-~-~-~-~-~-~-*/
+
+					// wavetable envelopes
+					if (osc_mix_1 < 1.0)
+						osc_mix_1 += osc_mix_1_rate;
+
+					if (osc_mix_2 < 1.0)
+						osc_mix_2 += osc_mix_2_rate;
+
+					// weird tanh output mixer
+					if (osc_mix_3 > 0.0)
+						osc_mix_3 -= osc_mix_3_rate;
+
+					/*-~-~-~-~-~-~-~-~-~-*/
+
+					// // update lfos
+					// lfo_output = wavetable_data[(uint8_t)((lfo_accumulator[v] += lfo_pitch[v]) >> 9) + (lfo_waveform[v] * 4)];
+					// lfo_output = (lfo_output * lfo_amplitude) >> 5;
+
+					// // lfo swell / lfo delay
+					// if (lfo_amplitude < (lfo_intensity[v] + 1) && lfo_tick == 0)
+					// {
+					// 	lfo_amplitude++;
+					// 	lfo_tick[v] = lfo_length[v] << 6;
+					// }
+					// else if (lfo_tick > 0)
+					// 	lfo_tick--;
+
+					/*-~-~-~-~-~-~-~-~-~-*/
+
+					if (osc_lpf_state < LPF_HIGH)
+						osc_lpf_state = osc_lpf_state + osc_lpf_speed;
+
+					// check for instrument reset
+					if (osc_note_on == 1)
+					{
+						// reset accumulator so we start at a zero crossing
+						osc_accumulator = 0;
+
+						// reset all the waveform mixes
+						osc_mix_1 = 0.0;
+						osc_mix_2 = 0.0;
+						osc_mix_3 = 1.0;
+
+						// do the rest of the stuff
+						osc_volume          = osc_target_volume;
+						osc_note_on         = 0;
+						configure_instrument(osc_instrument);
+
+						stereo_fx_counter++;
+						tan_smoothing_l = 0;
+						tan_smoothing_r = 0;
+
+						if ((stereo_fx_counter & 1) == 0)
+							tan_smoothing_l = stereo_effect;
+						else
+							tan_smoothing_r = stereo_effect;
+					}
+
+					fx_update_flag[v] = 1;
+				}
+				else
+				{
+					// update the drum voice
+					if (osc_note_on == 1)
+					{
+						osc_note_on         = 0;
+						current_drum_sample = (uint8_t)osc_pitch - 1;
+						drum_accumulator    = 0;
+					}
 				}
 
-				fx_update_flag[v] = 1;
+				fx_timer = FX_UPDATE_RATE;
 			}
 
-			// update the drum voice
-			if (osc_note_on[DRUM_VOICE] == 1)
-			{
-				osc_note_on[DRUM_VOICE] = 0;
-				current_drum_sample     = (uint8_t)osc_pitch[DRUM_VOICE] - 1;
-				drum_accumulator        = 0;
-			}
+			/*~~~~~~~~~~~~~~~~~~~~~~~~~*/
+			/*  process sequence data  */
+			/*~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
-			fx_timer = FX_UPDATE_RATE;
+			mmml_update(&osc_pitch,&osc_target_volume,&osc_instrument,&osc_note_on,&osc_panning,v);
 		}
 
-		/*~~~~~~~~~~~~~~~~~~~~~~~~~*/
-		/*  process sequence data  */
-		/*~~~~~~~~~~~~~~~~~~~~~~~~~*/
+		/*~~~~~~~~~~~~~~~~~~~~*/
+		/*  apply channel FX  */
+		/*~~~~~~~~~~~~~~~~~~~~*/
 
-		mmml(osc_pitch,osc_target_volume,osc_instrument,osc_note_on);
+		printf("(Effects)\n");
+
+		// process delay
+		if (channel_fx[v][1] > 0)
+		{
+			delay_process(
+				voice_buffer,
+				TOTAL_SAMPLES,
+				(uint32_t)delay_bank[channel_fx[v][1]][0] * 100,
+				(float)   delay_bank[channel_fx[v][1]][1] / 100.0,
+				(float)   delay_bank[channel_fx[v][1]][2] / 100.0,
+				(uint8_t) delay_bank[channel_fx[v][1]][3],
+				(float)   delay_bank[channel_fx[v][1]][4] / 100.0);
+		}
+
+		// process reverb
+		if (channel_fx[v][0] > 0)
+		{
+			reverb_process(
+				voice_buffer,
+				TOTAL_SAMPLES,
+				(float)reverb_bank[channel_fx[v][0]][0] / 100.0,
+				(float)reverb_bank[channel_fx[v][0]][1] / 100.0,
+				(float)reverb_bank[channel_fx[v][0]][2] / 100.0,
+				(float)reverb_bank[channel_fx[v][0]][3] / 100.0,
+				(float)reverb_bank[channel_fx[v][0]][4] / 100.0);
+		}
+
+		/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+		/*  export channel to master  */
+		/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+
+		for (uint32_t i = 0; i < TOTAL_SAMPLES; i++)
+			buffer_float[i] += voice_buffer[i];
+
+		// clean up the buffer
+		memset(voice_buffer, 0, TOTAL_SAMPLES * sizeof(float));
 	}
 
-	/*~~~~~~~~~~~~~~~~~~~~*/
-	/*  apply channel FX  */
-	/*~~~~~~~~~~~~~~~~~~~~*/
-
-	// we can free up some memory here
+	// we can free up some memory now
 	free(wavecycle_data);
 	free(drum_data);
+	free(voice_buffer);
 
 	/*~~~~~~~~~~~~~~~~~~~~~~~*/
 	/*  process output file  */

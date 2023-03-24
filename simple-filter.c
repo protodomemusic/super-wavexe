@@ -9,9 +9,6 @@
 *  DATE:         3rd May 2022
 **************************************************************/
 
-#define LPF 0
-#define HPF 1
-
 float last_input  [TOTAL_CHANNELS];
 float last_output [TOTAL_CHANNELS];
 float momentum    [TOTAL_CHANNELS];
