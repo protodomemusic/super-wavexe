@@ -51,7 +51,7 @@ float noise(float pitch)
 #define TOTAL_DRUM_DATA_SIZE  DRUM_DATA_SIZE * TOTAL_DRUM_SOUNDS
 
 // store drum sound parameters as tiny 8-bit numbers 
-uint8_t drum_sounds [TOTAL_DRUM_SOUNDS][TOTAL_DRUM_SOUND_PARAMETERS] = 
+static uint8_t drum_sounds [TOTAL_DRUM_SOUNDS][TOTAL_DRUM_SOUND_PARAMETERS] = 
 {
 //-----------------------------------------------//
 //     oscillator/wave      |    noise   | boost //
@@ -66,17 +66,17 @@ uint8_t drum_sounds [TOTAL_DRUM_SOUNDS][TOTAL_DRUM_SOUND_PARAMETERS] =
    {     4,   26,   80,   50,   50,   200,  200   },
 // 3: d+ closed hi-hat      |            |
    {    10,  255,  120,    0,   30,     0,  127   },
-// 3: d+ pedal hi-hat       |            |
+// 4: e  pedal hi-hat       |            |
    {    10,  255,  100,    0,   20,     0,  127   },
-// 4: e  open hi-hat        |            |
+// 5: f  open hi-hat        |            |
    {    10,  255,   20,    1,    5,     1,  127   },
-// 5: f  tom high           |            |
+// 6: f+ tom high           |            |
    {     1,  100,    9,   24,  230,   255,  180   },
-// 6: f+ tom medium         |            |
+// 7: g  tom medium         |            |
    {     1,   70,    9,   24,  230,   255,  180   },
-// 7: g  tom low            |            |
+// 8: g+ tom low            |            |
    {     1,   50,    9,   24,  230,   255,  180   },
-// 8: g+ kick/snare hit     |            |
+// 9: a  kick/snare hit     |            |
    {     1,   80,   25,  240,    5,     2,  220   },
 //-----------------------------------------------//
 };

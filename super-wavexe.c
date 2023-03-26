@@ -12,7 +12,8 @@
 *                https://github.com/protodomemusic/mmml
 *
 *                TO DO NEXT:
-*                - Vibrato/sweeps/portamento
+*                - Portamento
+*                - Vibrato/sweeps
 *                - Compile time is sllooowww, time to optimize
 *
 *  AUTHOR:       Blake 'PROTODOME' Troise
@@ -30,7 +31,7 @@
 #include <string.h>
 
 // note: definitions here required by wave-export.c
-#define PLAY_TIME      30     // duration of recording in seconds
+#define PLAY_TIME      150    // duration of recording in seconds
 #define SAMPLE_RATE    44100  // cd quality audio
 #define TOTAL_CHANNELS 2      // stereo file
 #define TOTAL_SAMPLES  (PLAY_TIME * TOTAL_CHANNELS) * SAMPLE_RATE
@@ -48,7 +49,6 @@ float map(float x, float in_min, float in_max, float out_min, float out_max)
 }
 
 // foldback distortion by ed.bpu@eriflleh
-// created: 2005-05-28 19:11:06
 // borrowed from https://www.musicdsp.org/en/latest/
 float foldback(float input, float threshold)
 {
@@ -98,12 +98,13 @@ float quart_smooth(float input)
 }
 
 // important definitions
-#define MASTER_GAIN    5700  // convert -1.0 - 1.0 float to 16-bit
-#define DITHER_GAIN    5     // volume of dither noise
-#define OSC_DIVISOR    100   // change this to alter master tuning
-#define TOTAL_VOICES   4     // how many oscillators (plus drum channel) we're calculating
-#define FX_UPDATE_RATE 100   // how many frames before we update the FX parameters
-#define LPF_HIGH       0.5   // the maximum height of the filter
+#define MASTER_GAIN    5700    // convert -1.0 - 1.0 float to 16-bit
+#define DITHER_GAIN    5       // volume of dither noise
+#define OSC_DIVISOR    100     // change this to alter master tuning
+#define TOTAL_VOICES   8       // how many oscillators (plus drum channel) we're calculating
+#define FX_UPDATE_RATE 100     // how many frames before we update the FX parameters
+#define LPF_HIGH       0.5     // the maximum height of the filter
+#define ZERO_CROSS_EVENT 0.005 // what we consider to be a zero crossing
 
 // externals
 #include "simple-filter.c"
@@ -128,67 +129,63 @@ float    osc_mix_1_rate;
 float    osc_mix_2_rate;
 float    osc_mix_3_rate;
 
+// effect variables
 float    stereo_effect;
 float    osc_lpf_state;
 float    osc_lpf_speed;
 float    osc_lpf_q;
-
 float    osc_distortion;
-
-// lfo variables
-double   lfo_accumulator;
-float    lfo_pitch;
-float    lfo_volume;
+float    osc_instrument_boost;
 
 // drum variables
 uint32_t drum_accumulator = DRUM_DATA_SIZE;
 uint8_t  current_drum_sample;
 
 #define TOTAL_INSTRUMENTS     9
-#define INSTRUMENT_PARAMETERS 11
+#define INSTRUMENT_PARAMETERS 12
 
 static uint8_t instrument_bank [TOTAL_INSTRUMENTS][INSTRUMENT_PARAMETERS] =
 {
-//--------------------------------------------------------------------------//
-//   waveform  |   wave mix  | decay | tan smooth fx |   low pass   | fldbk |
-//   1 | 2 | 3 | 1->2 | 2->3 | speed | speed | stereo| speed |   Q  | dstrn |
-//-------------|-------------|-------|---------------|----------------------|
-// 0: squishy saw            |       |               |              |       |
-   {  7,  8,  9,   155,   225,    200,      1,    100,     60,   255,      0,},
-// 1: glassy e-piano         |       |               |              |       |
-   {  6, 10,  0,   100,   200,    200,     10,     90,    240,   200,      0,},
-// 2: music box              |       |               |              |       |
-   {  6,  0,  0,     1,   220,    100,      1,     10,      0,     0,      0,},
-// 3: frog guitar            |       |               |              |       |
-   {  3,  1,  0,   200,   252,    190,    210,     10,     60,   100,      0,},
-// 4: gritty bass            |       |               |              |       |
-   {  0,  0,  3,     1,   252,    190,    255,     10,      0,     0,    200,},
-// 5: funky rhodes           |       |               |              |       |
-   {  3,  1,  0,   110,    20,    180,    255,     90,    240,   200,      0,},
-// 6: xylophonic organ       |       |               |              |       |
-   { 11,  0,  0,    40,    20,    120,    220,    120,      0,     0,      0,},
-// 7: portasound keys        |       |               |              |       |
-   {  5, 10,  0,     0,   190,    170,    230,    100,     10,   180,      0,},
-// 8: soft rhodes            |       |               |              |       |
-   {  0,  0,  0,   110,    20,    130,    255,     90,      0,     0,    135,},
-//--------------------------------------------------------------------------//
+//----------------------------------------------------------------------------------//
+//   waveform  |   wave mix  | decay | tan smooth fx |   low pass   | fldbk | instr |
+//   1 | 2 | 3 | 1->2 | 2->3 | speed | speed | stereo| speed |   Q  | dstrn | boost |
+//-------------|-------------|-------|---------------|----------------------|-------|
+// 0: squishy saw            |       |               |              |       |       |
+   {  7,  8,  9,   155,   225,    200,      1,    100,     80,   255,      0,     40,},
+// 1: wurlitzer              |       |               |              |       |       |
+   {  1,  7,  0,     1,   200,    130,    100,     90,      0,     0,    100,     60,},
+// 2: music box              |       |               |              |       |       |
+   {  6,  0,  0,   200,   220,      1,      1,     10,      0,     0,      0,     76,},
+// 3: modem lead             |       |               |              |       |       |
+   {  7, 14,  0,   200,   150,    190,    210,     10,      0,     0,    200,    120,},
+// 4: gritty bass            |       |               |              |       |       |
+   {  0,  0,  3,     1,   252,    190,    255,     10,      0,     0,    120,    255,},
+// 5: funky rhodes           |       |               |              |       |       |
+   {  3,  1,  0,   110,    20,    130,    255,     90,    240,   200,    120,     74,},
+// 6: xylophonic organ       |       |               |              |       |       |
+   { 11,  0,  0,    40,    20,    120,    220,    120,      0,     0,    120,     64,},
+// 7: clicky bass            |       |               |              |       |       |
+   {  7,  0,  3,     1,   252,    190,    255,     10,     20,    10,    120,    235,},
+// 8: soft rhodes            |       |               |              |       |       |
+   {  0,  0,  0,   110,    20,    130,    255,     90,      0,     0,    100,     54,},
+//----------------------------------------------------------------------------------//
 };
 
 // allows for balancing of voices
 static float voice_boost [TOTAL_VOICES] =
 {
-//---------------------//
-//  <--- osc --->| drm //
-//  #1 | #2 | #3 | #4  //
-//-----|----|----|-----//
-    0.4, 0.4, 0.4, 1.0
-//---------------------//
+//------------------------------------------------//
+//  <---------------- osc ----------------> | drm //
+//  #0  | #1  | #2  | #3  | #4  | #5  | #6  | #7  //
+//------|-----|-----|-----|-----|-----|-----|-----//
+     1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  0.9
+//------------------------------------------------//
 };
 
 #define TOTAL_REVERB_PRESETS     5
 #define TOTAL_REVERB_PARAMETERS  5
 
-uint8_t reverb_bank [TOTAL_REVERB_PRESETS][TOTAL_REVERB_PARAMETERS] =
+static uint8_t reverb_bank [TOTAL_REVERB_PRESETS][TOTAL_REVERB_PARAMETERS] =
 {
 //---------------------------------------//
 //   width |  dry |  wet | damp | room  |//
@@ -209,7 +206,7 @@ uint8_t reverb_bank [TOTAL_REVERB_PRESETS][TOTAL_REVERB_PARAMETERS] =
 #define TOTAL_DELAY_PRESETS     5
 #define TOTAL_DELAY_PARAMETERS  5
 
-uint8_t delay_bank [TOTAL_DELAY_PRESETS][TOTAL_DELAY_PARAMETERS] =
+static uint8_t delay_bank [TOTAL_DELAY_PRESETS][TOTAL_DELAY_PARAMETERS] =
 {
 //-----------------------------------------------//
 //  offset | feedbk | spread | dirctn |   mix  | //
@@ -229,19 +226,27 @@ uint8_t delay_bank [TOTAL_DELAY_PRESETS][TOTAL_DELAY_PARAMETERS] =
 
 #define TOTAL_FX 2
 
-uint8_t channel_fx [TOTAL_VOICES][TOTAL_FX] =
+static uint8_t channel_fx [TOTAL_VOICES][TOTAL_FX] =
 {
 //----------------//
 // reverb | delay //
 //----------------//
 // voice #0
-	{   2,    1  },
+	{   3,    1  },
 // voice #1
-	{   2,    2  },
+	{   3,    2  },
 // voice #2
-	{   0,    0  },
+	{   3,    1  },
 // voice #3
+	{   3,    2  },
+// voice #4
+	{   3,    1  },
+// voice #5
+	{   4,    3  },
+// voice #6
 	{   1,    0  },
+// voice #7
+	{   2,    0  },
 //----------------//
 };
 
@@ -269,7 +274,10 @@ void configure_instrument(uint8_t instrument_id)
 	osc_lpf_q      = map(instrument_bank[instrument_id][9], 0, 255, 0.1, 0.008);
 
 	// distortion
-	osc_distortion = map(instrument_bank[instrument_id][10], 0, 255, 0.5, 0.1);
+	osc_distortion = map(instrument_bank[instrument_id][10], 0, 255, 1.0, 0.05);
+
+	// instrument volume
+	osc_instrument_boost = map(instrument_bank[instrument_id][11], 0, 255, 0.0, 2.0);
 }
 
 int main()
@@ -371,34 +379,34 @@ int main()
 			if (v < DRUM_VOICE)
 			{
 				current_osc_sample = (osc_accumulator += osc_pitch) / OSC_DIVISOR;
-				channel_output_l   = osc_wavetable_l[(uint32_t)current_osc_sample % WAVECYCLE_SIZE] * voice_boost[v];
-				channel_output_r   = osc_wavetable_r[(uint32_t)current_osc_sample % WAVECYCLE_SIZE] * voice_boost[v];
+				channel_output_l   = osc_wavetable_l[(uint32_t)current_osc_sample % WAVECYCLE_SIZE];
+				channel_output_r   = osc_wavetable_r[(uint32_t)current_osc_sample % WAVECYCLE_SIZE];
 
 				// apply low pass filter
 				if (osc_lpf_q > 0)
 				{
 					channel_output_l = resonant_LPF(channel_output_l, osc_lpf_state, osc_lpf_q + osc_lpf_state, 0);
-					channel_output_r = resonant_LPF(channel_output_l, osc_lpf_state, osc_lpf_q + osc_lpf_state, 1);
+					channel_output_r = resonant_LPF(channel_output_r, osc_lpf_state, osc_lpf_q + osc_lpf_state, 1);
 				}
 
 				// apply foldback distortion
-				if (osc_distortion < 0.5)
+				if (osc_distortion < 1.0)
 				{
 					channel_output_l = foldback(channel_output_l, osc_distortion);
 					channel_output_r = foldback(channel_output_r, osc_distortion);
 				}
 
 				// write the final sample to the output
-				float_output_l += channel_output_l;
-				float_output_r += channel_output_r;
+				float_output_l += channel_output_l * osc_instrument_boost;
+				float_output_r += channel_output_r * osc_instrument_boost;
 			}
 			else
 			{
 				if (drum_accumulator < DRUM_DATA_SIZE)
 				{
 					drum_accumulator++;
-					float_output_l += drum_data[drum_accumulator + (DRUM_DATA_SIZE * current_drum_sample)] * cube_smooth(osc_target_volume) * voice_boost[v];
-					float_output_r += drum_data[drum_accumulator + (DRUM_DATA_SIZE * current_drum_sample)] * cube_smooth(osc_target_volume) * voice_boost[v];
+					float_output_l += drum_data[drum_accumulator + (DRUM_DATA_SIZE * current_drum_sample)] * cube_smooth(osc_target_volume);
+					float_output_r += drum_data[drum_accumulator + (DRUM_DATA_SIZE * current_drum_sample)] * cube_smooth(osc_target_volume);
 				}
 			}
 
@@ -406,15 +414,15 @@ int main()
 			if (fx_update_flag[v] == 1)
 			{
 				// ...and if we're (basically) at a zero crossing
-				if ((channel_output_l > -0.001 && channel_output_l < 0.001) || (channel_output_r > -0.001 && channel_output_r < 0.001))
+				if ((channel_output_l > -0.005 && channel_output_l < 0.005) || (channel_output_r > -0.005 && channel_output_r < ZERO_CROSS_EVENT))
 				{
 					float output = 0.0;
 
 					// let's calculate the panning first
-					float panning_l = 1.0;
-					float panning_r = 1.0;
+					float panning_l;
+					float panning_r;
 
-					float pan_mapped = (((osc_panning / 100.0) + 1) / 2.0) * (PI / 2.0);
+					float pan_mapped = (((float)(osc_panning / 100.0) + 1) / 2.0) * (PI / 2.0);
 
 					panning_r = sin(pan_mapped);
 					panning_l = cos(pan_mapped);
@@ -491,21 +499,6 @@ int main()
 					// weird tanh output mixer
 					if (osc_mix_3 > 0.0)
 						osc_mix_3 -= osc_mix_3_rate;
-
-					/*-~-~-~-~-~-~-~-~-~-*/
-
-					// // update lfos
-					// lfo_output = wavetable_data[(uint8_t)((lfo_accumulator[v] += lfo_pitch[v]) >> 9) + (lfo_waveform[v] * 4)];
-					// lfo_output = (lfo_output * lfo_amplitude) >> 5;
-
-					// // lfo swell / lfo delay
-					// if (lfo_amplitude < (lfo_intensity[v] + 1) && lfo_tick == 0)
-					// {
-					// 	lfo_amplitude++;
-					// 	lfo_tick[v] = lfo_length[v] << 6;
-					// }
-					// else if (lfo_tick > 0)
-					// 	lfo_tick--;
 
 					/*-~-~-~-~-~-~-~-~-~-*/
 
@@ -598,7 +591,7 @@ int main()
 		/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
 		for (uint32_t i = 0; i < TOTAL_SAMPLES; i++)
-			buffer_float[i] += voice_buffer[i];
+			buffer_float[i] += voice_buffer[i] * voice_boost[v];
 
 		// clean up the buffer
 		memset(voice_buffer, 0, TOTAL_SAMPLES * sizeof(float));

@@ -18,8 +18,13 @@
 #define MAXLOOPS         5        // total number of nested loops
 #define TOTAL_NOTES      108      // how many notes we'll generate
 #define NOTE_END         7902.13  // the highest frequency we'll generate
-#define MASTER_TRANSPOSE 35       // master pitch offset
-#define DEFAULT_TEMPO    640
+#define MASTER_TRANSPOSE 36       // master pitch offset
+
+// To work out the mmml tick update rate to BPM conversion,
+// use the following: SAMPLE_RATE/((TARGET_BPM * 32)/60)
+// Be aware that it's slightly off though.
+// 640 is 129 exactly btw, which I don't get??
+#define DEFAULT_TEMPO 640//620
 
 // mmml variables
 float    mmml_volume;
@@ -31,9 +36,9 @@ int8_t   mmml_tie_flag;
 uint8_t  loops_active;
 uint16_t data_pointer;
 uint16_t pointer_location;
-uint16_t loop_duration    [MAXLOOPS];
-uint16_t loop_point       [MAXLOOPS];
-float    notes            [TOTAL_NOTES];
+uint16_t loop_duration [MAXLOOPS];
+uint16_t loop_point    [MAXLOOPS];
+float    notes         [TOTAL_NOTES];
 
 // main timer variables
 uint16_t tick_counter;
@@ -198,7 +203,7 @@ void mmml_update(float *pitch_io, float *volume_io, uint8_t *instrument_io, uint
 					mmml_octave = buffer2;
 				// volume
 				if(buffer1 == 14)
-					mmml_volume = buffer2 / 8.0;
+					mmml_volume = map(buffer2, 0, 8, 0.0, 1.0);
 
 				data_pointer++;
 				goto LOOP; // see comment above previous GOTO
