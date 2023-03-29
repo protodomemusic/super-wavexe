@@ -1,13 +1,20 @@
 /**************************************************************
-* The wave building code was adapted from:
-* https://stackoverflow.com/questions/23030980/creating-a-mono-
-* wav-file-using-c - thanks Safayet Ahmed!
+*  FILENAME:     wave-export.h
+*  DESCRIPTION:  Normalizes float audio buffer to 16-bit int,
+*                then exports as 16-bit wave file.
+*
+*                The wave building code was adapted from:
+*                https://stackoverflow.com/questions/23030980/
+*                creating-a-mono-wav-file-using-c - thanks
+*                Safayet Ahmed!
+*
+*  DATE:         29th March 2023
 **************************************************************/
 
 // definitions required for a 16-bit wave file
-#define BITS_PER_SAMPLE  16     // 16-bit wave files require 16 bits per sample
-#define AUDIO_FORMAT     1      // for PCM data
-#define SUBCHUNK_1_SIZE  16     // dunno, what's this?
+#define BITS_PER_SAMPLE  16  // 16-bit wave files require 16 bits per sample
+#define AUDIO_FORMAT     1   // for PCM data
+#define SUBCHUNK_1_SIZE  16  // dunno, what's this?
 #define BYTE_RATE        SAMPLE_RATE * TOTAL_CHANNELS * BITS_PER_SAMPLE / 8
 #define BLOCK_ALIGN      TOTAL_CHANNELS * BITS_PER_SAMPLE / 8
 #define TOTAL_SAMPLES    (PLAY_TIME * TOTAL_CHANNELS) * SAMPLE_RATE
@@ -78,10 +85,45 @@ void wave_export(int16_t *input_buffer, uint32_t input_length)
 	// write header to file
 	fwrite(&wav_header, sizeof(wavfile_header_t), 1, output_wave_file);
 
-	printf("Writing to output file...\n");
+	#ifdef DEBUG
+		printf("Writing to output file...\n");
+	#endif
 
 	// write sample data to file
 	fwrite(input_buffer, sizeof(uint16_t), input_length-1, output_wave_file);
 
-	printf("Successfully written! (Maybe, there's no error checking.)\n");
+	#ifdef DEBUG
+		printf("Successfully written! (Maybe, there's no error checking.)\n");
+	#endif
+}
+
+void float_to_sixteen_bit(float *input_buffer_float, int16_t *input_buffer_int, uint32_t input_length)
+{
+	float loudest_sample = 0.0;
+	float current_sample = 0.0;
+	float multiplier     = 0.0;
+
+	for (uint32_t i = 0; i < TOTAL_SAMPLES; i++)
+	{
+		current_sample = fabs(input_buffer_float[i]);
+		if (current_sample > loudest_sample)
+			loudest_sample = current_sample;
+	}
+
+	#ifdef DEBUG
+		printf("Loudest sample: %f\n",loudest_sample);
+	#endif
+
+	multiplier = 32767.0 / loudest_sample;
+
+	for (uint32_t i = 0; i < TOTAL_SAMPLES; i++)
+		input_buffer_float[i] = input_buffer_float[i] * multiplier;
+
+
+	// squash down to 16-bit, add dither
+	for (uint32_t i = 0; i < TOTAL_SAMPLES; i++)
+	{
+		input_buffer_float [i] = input_buffer_float[i] + (noise(0) * DITHER_GAIN);
+		input_buffer_int   [i] = (int16_t)input_buffer_float[i];
+	}
 }

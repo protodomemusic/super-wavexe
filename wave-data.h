@@ -180,20 +180,20 @@ static float divisors [TOTAL_DIVISORS * 2] =
 	6,   6,   // brittle
 };
 
-float operator_function(input, function)
+float operator_function(uint16_t input, uint16_t function)
 {
 	float output;
 
 	switch (function)
 	{
 		case 0: // sine wave operator
-			output =  sin(PI * (input - WAVECYCLE_HALF) / WAVECYCLE_HALF);
+			output =  sinf(PI * (input - WAVECYCLE_HALF) / WAVECYCLE_HALF);
 			break;
 		case 1: // hypertan wave operator
-			output = tanh(PI * (input - WAVECYCLE_HALF) / WAVECYCLE_HALF);
+			output = tanhf(PI * (input - WAVECYCLE_HALF) / WAVECYCLE_HALF);
 			break;
 		case 2: // hypersine wave operator
-			output = sinh(PI * (input - WAVECYCLE_HALF) / WAVECYCLE_HALF);
+			output = sinhf(PI * (input - WAVECYCLE_HALF) / WAVECYCLE_HALF);
 			break;
 		case 3: // silence
 			output = 0;
@@ -219,7 +219,7 @@ void generate_wavecycles(float *input_wavecycle_array)
 		current_algorithm = i / TOTAL_DIVISORS;
 
 		for (uint16_t w = 0; w < WAVECYCLE_SIZE; w++)
-			wave_data [w] = (operator_function(w, current_algorithm) * cos(PI * (w - WAVECYCLE_HALF) / (WAVECYCLE_HALF / divisors[(i % TOTAL_DIVISORS)*2]))) * cos(PI * (w - WAVECYCLE_HALF) / (WAVECYCLE_HALF / divisors[((i % TOTAL_DIVISORS)*2)+1]));
+			wave_data [w] = (operator_function(w, current_algorithm) * cosf(PI * (w - WAVECYCLE_HALF) / (WAVECYCLE_HALF / divisors[(i % TOTAL_DIVISORS)*2]))) * cosf(PI * (w - WAVECYCLE_HALF) / (WAVECYCLE_HALF / divisors[((i % TOTAL_DIVISORS)*2)+1]));
 
 		/*=========================*/
 		/* wavecycle normalization */

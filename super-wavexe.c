@@ -14,7 +14,6 @@
 *                TO DO NEXT:
 *                - Portamento
 *                - Vibrato/sweeps
-*                - Compile time is sllooowww, time to optimize
 *
 *  AUTHOR:       Blake 'PROTODOME' Troise
 *  PLATFORM:     Command Line Application (MacOS / Linux)
@@ -30,6 +29,17 @@
 #include <time.h>
 #include <string.h>
 
+// comment out to change stuff
+//#define LINUX // linux playback
+#define DEBUG // debug messages
+
+// currently only linux supports live playback via the ALSA library
+// make sure to do: apt-get install libasound2-dev
+#ifdef LINUX
+#include <alsa/asoundlib.h>
+#include "alsa-playback.c"
+#endif
+
 // note: definitions here required by wave-export.c
 #define PLAY_TIME      150    // duration of recording in seconds
 #define SAMPLE_RATE    44100  // cd quality audio
@@ -39,80 +49,24 @@
 // the voice we're using for the drums (behaves slightly differently)
 #define DRUM_VOICE TOTAL_VOICES - 1
 
-// math stuff
-#define PI 3.1415 // an accurate enough pi
-
-// stealing the arduino map function - it's very handy indeed!
-float map(float x, float in_min, float in_max, float out_min, float out_max)
-{
-	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-}
-
-// foldback distortion by ed.bpu@eriflleh
-// borrowed from https://www.musicdsp.org/en/latest/
-float foldback(float input, float threshold)
-{
-	if (input > threshold || input <- threshold)
-		input = fabs(fabs(fmod(input - threshold, threshold * 4)) - threshold * 2) - threshold;
-	return input;
-}
-
-// nice little curve generator, makes a linear input (0.0 - 1.0) non-linear
-// works on one side of the waveform for timbral interest
-// I've found that having some DC wobble makes the waveforms sound a little
-// more natural.
-// Adjust the amount of variation with the "strength" parameter.
-float tan_smooth(float input, float strength)
-{
-	// requires cleanup at 0.0 and 1.0 as the algorithm isn't quite perfect
-	if (input > 0.0 && input < 1.0)
-	{
-		float x = (input - 0.5) / 0.5;
-		float y = tanh(PI * x) / 2 + 0.5;
-		float variation = sin(PI * input) * strength;
-		return y + variation;
-	}
-		return input;
-}
-
-// cubic interpolation curve
-// (does the same as the above, but for both sides of the waveform)
-float cube_smooth(float input)
-{
-    if (input <= 0.0)
-        return 0.0;
-    else if (input >= 1.0)
-        return 1.0;
-    else
-        return input * input * (3 - 2 * input);
-}
-
-float quart_smooth(float input)
-{
-    if (input <= 0.0)
-        return 0.0;
-    else if (input >= 1.0)
-        return 1.0;
-    else
-        return input * input * input * input * (10 + input * (-15 + 6 * input));
-}
-
 // important definitions
-#define MASTER_GAIN    5700    // convert -1.0 - 1.0 float to 16-bit
-#define DITHER_GAIN    5       // volume of dither noise
-#define OSC_DIVISOR    100     // change this to alter master tuning
-#define TOTAL_VOICES   8       // how many oscillators (plus drum channel) we're calculating
-#define FX_UPDATE_RATE 100     // how many frames before we update the FX parameters
-#define LPF_HIGH       0.5     // the maximum height of the filter
-#define ZERO_CROSS_EVENT 0.005 // what we consider to be a zero crossing
+#define MASTER_GAIN      5700    // convert -1.0 - 1.0 float to 16-bit
+#define DITHER_GAIN      5       // volume of dither noise
+#define OSC_DIVISOR      100     // change this to alter master tuning
+#define TOTAL_VOICES     8       // how many oscillators (plus drum channel) we're calculating
+#define FX_UPDATE_RATE   100     // how many frames before we update the FX parameters
+#define LPF_HIGH         0.5     // the maximum height of the filter
+#define ZERO_CROSS_EVENT 0.005   // what we consider to be a zero crossing
 
 // externals
+#include "instrument-config.h"
+#include "handy-functions.h"
 #include "simple-filter.c"
-#include "wave-export.c"
 #include "wave-data.h"
 #include "mmml.c"
 #include "freeverb.c"
 #include "simple-delay.c"
+#include "wave-export.c"
 
 // oscillator variables
 float    osc_decay;
@@ -140,115 +94,6 @@ float    osc_instrument_boost;
 // drum variables
 uint32_t drum_accumulator = DRUM_DATA_SIZE;
 uint8_t  current_drum_sample;
-
-#define TOTAL_INSTRUMENTS     9
-#define INSTRUMENT_PARAMETERS 12
-
-static uint8_t instrument_bank [TOTAL_INSTRUMENTS][INSTRUMENT_PARAMETERS] =
-{
-//----------------------------------------------------------------------------------//
-//   waveform  |   wave mix  | decay | tan smooth fx |   low pass   | fldbk | instr |
-//   1 | 2 | 3 | 1->2 | 2->3 | speed | speed | stereo| speed |   Q  | dstrn | boost |
-//-------------|-------------|-------|---------------|----------------------|-------|
-// 0: squishy saw            |       |               |              |       |       |
-   {  7,  8,  9,   155,   225,    200,      1,    100,     80,   255,      0,     40,},
-// 1: wurlitzer              |       |               |              |       |       |
-   {  1,  7,  0,     1,   200,    130,    100,     90,      0,     0,    100,     60,},
-// 2: music box              |       |               |              |       |       |
-   {  6,  0,  0,   200,   220,      1,      1,     10,      0,     0,      0,     76,},
-// 3: modem lead             |       |               |              |       |       |
-   {  7, 14,  0,   200,   150,    190,    210,     10,      0,     0,    200,    120,},
-// 4: gritty bass            |       |               |              |       |       |
-   {  0,  0,  3,     1,   252,    190,    255,     10,      0,     0,    120,    255,},
-// 5: funky rhodes           |       |               |              |       |       |
-   {  3,  1,  0,   110,    20,    130,    255,     90,    240,   200,    120,     74,},
-// 6: xylophonic organ       |       |               |              |       |       |
-   { 11,  0,  0,    40,    20,    120,    220,    120,      0,     0,    120,     64,},
-// 7: clicky bass            |       |               |              |       |       |
-   {  7,  0,  3,     1,   252,    190,    255,     10,     20,    10,    120,    235,},
-// 8: soft rhodes            |       |               |              |       |       |
-   {  0,  0,  0,   110,    20,    130,    255,     90,      0,     0,    100,     54,},
-//----------------------------------------------------------------------------------//
-};
-
-// allows for balancing of voices
-static float voice_boost [TOTAL_VOICES] =
-{
-//------------------------------------------------//
-//  <---------------- osc ----------------> | drm //
-//  #0  | #1  | #2  | #3  | #4  | #5  | #6  | #7  //
-//------|-----|-----|-----|-----|-----|-----|-----//
-     1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  0.9
-//------------------------------------------------//
-};
-
-#define TOTAL_REVERB_PRESETS     5
-#define TOTAL_REVERB_PARAMETERS  5
-
-static uint8_t reverb_bank [TOTAL_REVERB_PRESETS][TOTAL_REVERB_PARAMETERS] =
-{
-//---------------------------------------//
-//   width |  dry |  wet | damp | room  |//
-//----------------|------|------|-------|//
-// 0: no reverb   |      |      |       |
-	{     0,   100,     0,     0,     0  },
-// 1: a dusting   |      |      |       |
-	{   150,   100,    15,    10,    10  },
-// 2: a little space     |      |       |
-	{   150,   100,    15,    50,    30  },
-// 3: roomy       |      |      |       |
-	{   200,   100,    20,    60,    80  },
-// 4: spacious    |      |      |       |
-	{   200,   100,    40,   100,    80  },
-//----------------------------------------//
-};
-
-#define TOTAL_DELAY_PRESETS     5
-#define TOTAL_DELAY_PARAMETERS  5
-
-static uint8_t delay_bank [TOTAL_DELAY_PRESETS][TOTAL_DELAY_PARAMETERS] =
-{
-//-----------------------------------------------//
-//  offset | feedbk | spread | dirctn |   mix  | //
-//---------|--------|--------|--------|--------|-//
-// 0: no delay      |        |        |        |
-	{     0,       0,       0,       0,       0  },
-// 1: super subtle delay left         |        |
-	{   140,      99,      20,       1,       8  },
-// 2: super subtle delay right        |        |
-	{   140,      99,      20,       0,       8  },
-// 3: classic stereo echo    |        |        |
-	{   255,      40,      80,       0,      40  },
-// 4: huge delay    |        |        |        |
-	{   255,      99,      20,       1,      50  },
-//-----------------------------------------------//
-};
-
-#define TOTAL_FX 2
-
-static uint8_t channel_fx [TOTAL_VOICES][TOTAL_FX] =
-{
-//----------------//
-// reverb | delay //
-//----------------//
-// voice #0
-	{   3,    1  },
-// voice #1
-	{   3,    2  },
-// voice #2
-	{   3,    1  },
-// voice #3
-	{   3,    2  },
-// voice #4
-	{   3,    1  },
-// voice #5
-	{   4,    3  },
-// voice #6
-	{   1,    0  },
-// voice #7
-	{   2,    0  },
-//----------------//
-};
 
 void configure_instrument(uint8_t instrument_id)
 {
@@ -282,58 +127,69 @@ void configure_instrument(uint8_t instrument_id)
 
 int main()
 {
-	// get start time (for checking processing time)
-	clock_t begin = clock();
+	#ifdef DEBUG
+		// get start time (for checking processing time)
+		clock_t begin = clock();
+	#endif
 
-	// where we'll put the final float data
-	float *buffer_float = (float*)malloc(TOTAL_SAMPLES * sizeof(float));
+	// we need our lookups
+	trig_tables_init();
 
-	// where we'll put the individual voice data
-	float *voice_buffer = (float*)malloc(TOTAL_SAMPLES * sizeof(float));
-
-	// where we'll put wavecycle data
+	// where we'll put the final mix, individual voice, and wavecycle data
+	float *buffer_float   = (float*)malloc(TOTAL_SAMPLES  * sizeof(float));
+	float *voice_buffer   = (float*)malloc(TOTAL_SAMPLES  * sizeof(float));
 	float *wavecycle_data = (float*)malloc(WAVECYCLE_SIZE * (TOTAL_WAVECYCLES + 1) * sizeof(float));
 
-	printf("Building wavecycles...\n");
+	#ifdef DEBUG
+		printf("Building wavecycles...\n");
+	#endif
+
 	generate_wavecycles(wavecycle_data);
 
 	// where we'll put drum data
 	float *drum_data = (float*)malloc(TOTAL_DRUM_DATA_SIZE * sizeof(float));
 
-	printf("Building drums...\n");
+	#ifdef DEBUG
+		printf("Building drums...\n");
+	#endif
+
 	drum_generator(drum_data, wavecycle_data);
 
 	// fx variables
 	uint16_t fx_timer;
 	uint8_t  fx_update_flag [TOTAL_VOICES];
 
-	//-------------//
-	// debug stuff //
-	//-------------//
-	uint32_t debug_song_buffer_size    = TOTAL_SAMPLES  * sizeof(float);
-	uint32_t debug_voice_buffer_size   = TOTAL_SAMPLES  * sizeof(float);
-	uint32_t debug_wavecycle_data_size = WAVECYCLE_SIZE * (TOTAL_WAVECYCLES + 1) * sizeof(float);
-	uint32_t debug_drum_data_size      = TOTAL_DRUM_DATA_SIZE * sizeof(float);
-	uint32_t debug_total_memory_usage  = debug_drum_data_size + debug_voice_buffer_size + debug_wavecycle_data_size + debug_drum_data_size;
+	#ifdef DEBUG
+		uint32_t debug_song_buffer_size    = TOTAL_SAMPLES  * sizeof(float);
+		uint32_t debug_voice_buffer_size   = TOTAL_SAMPLES  * sizeof(float);
+		uint32_t debug_wavecycle_data_size = WAVECYCLE_SIZE * (TOTAL_WAVECYCLES + 1) * sizeof(float);
+		uint32_t debug_drum_data_size      = TOTAL_DRUM_DATA_SIZE * sizeof(float);
+		uint32_t debug_total_memory_usage  = debug_drum_data_size + debug_voice_buffer_size + debug_wavecycle_data_size + debug_drum_data_size;
 
-	printf("-------\n");
-	printf("song buffer      = %u bytes\n", debug_song_buffer_size);
-	printf("voice buffer     = %u bytes\n", debug_voice_buffer_size);
-	printf("wavecycle data   = %u bytes\n", debug_wavecycle_data_size);
-	printf("drum sample data = %u bytes\n", debug_drum_data_size);
-	printf("total mem usage  = %u bytes\n", debug_total_memory_usage);
-	printf("-------\n");
-	//-------------//
+		printf("-------\n");
+		printf("song buffer      = %u bytes\n", debug_song_buffer_size);
+		printf("voice buffer     = %u bytes\n", debug_voice_buffer_size);
+		printf("wavecycle data   = %u bytes\n", debug_wavecycle_data_size);
+		printf("drum sample data = %u bytes\n", debug_drum_data_size);
+		printf("total mem usage  = %u bytes\n", debug_total_memory_usage);
+		printf("-------\n");
+	#endif
 
 	/*~~~~~~~~~~~~~~~~~~~~~~~*/
 	/*  generate audio file  */
 	/*~~~~~~~~~~~~~~~~~~~~~~~*/
 
-	printf("Generating audio...\n");
+	#ifdef DEBUG
+		printf("Generating audio...\n");
+	#endif
 
 	for (uint8_t v = 0; v < TOTAL_VOICES; ++v)
 	{
-		printf("Voice #%i (Generation)", v);
+		#ifdef DEBUG
+			// get voice start time
+			clock_t voice_begin = clock();
+			printf("Voice #%i (Generation)", v);
+		#endif
 
 		// initialize MMML variables
 		mmml_setup(v);
@@ -375,6 +231,7 @@ int main()
 			float channel_output_r   = 0.0;
 			float float_output_l     = 0.0;
 			float float_output_r     = 0.0;
+			float drum_output        = 0.0;
 
 			if (v < DRUM_VOICE)
 			{
@@ -383,11 +240,8 @@ int main()
 				channel_output_r   = osc_wavetable_r[(uint32_t)current_osc_sample % WAVECYCLE_SIZE];
 
 				// apply low pass filter
-				if (osc_lpf_q > 0)
-				{
-					channel_output_l = resonant_LPF(channel_output_l, osc_lpf_state, osc_lpf_q + osc_lpf_state, 0);
-					channel_output_r = resonant_LPF(channel_output_r, osc_lpf_state, osc_lpf_q + osc_lpf_state, 1);
-				}
+				channel_output_l = resonant_LPF(channel_output_l, osc_lpf_state, osc_lpf_q + osc_lpf_state, 0);
+				channel_output_r = resonant_LPF(channel_output_r, osc_lpf_state, osc_lpf_q + osc_lpf_state, 1);
 
 				// apply foldback distortion
 				if (osc_distortion < 1.0)
@@ -405,16 +259,19 @@ int main()
 				if (drum_accumulator < DRUM_DATA_SIZE)
 				{
 					drum_accumulator++;
-					float_output_l += drum_data[drum_accumulator + (DRUM_DATA_SIZE * current_drum_sample)] * cube_smooth(osc_target_volume);
-					float_output_r += drum_data[drum_accumulator + (DRUM_DATA_SIZE * current_drum_sample)] * cube_smooth(osc_target_volume);
+					drum_output = drum_data[drum_accumulator + (DRUM_DATA_SIZE * current_drum_sample)] * cube_smooth(osc_target_volume);
+					float_output_l += drum_output;
+					float_output_r += drum_output;
 				}
 			}
 
 			// update waveform if fx has changed...
 			if (fx_update_flag[v] == 1)
 			{
-				// ...and if we're (basically) at a zero crossing
-				if ((channel_output_l > -0.005 && channel_output_l < 0.005) || (channel_output_r > -0.005 && channel_output_r < ZERO_CROSS_EVENT))
+				// ...and if we're (basically) at a zero crossing (makes waveforms update smoother)
+				// plus it also reduces how often we have to run this code.
+				if ((channel_output_l > -ZERO_CROSS_EVENT && channel_output_l < ZERO_CROSS_EVENT) ||
+				    (channel_output_r > -ZERO_CROSS_EVENT && channel_output_r < ZERO_CROSS_EVENT))
 				{
 					float output = 0.0;
 
@@ -424,8 +281,8 @@ int main()
 
 					float pan_mapped = (((float)(osc_panning / 100.0) + 1) / 2.0) * (PI / 2.0);
 
-					panning_r = sin(pan_mapped);
-					panning_l = cos(pan_mapped);
+					panning_r = sin_lookup(pan_mapped);
+					panning_l = sin_lookup(pan_mapped + (PI/2)); // cosine
 
 					for (int16_t i = 0; i < WAVECYCLE_SIZE; i++)
 					{
@@ -517,8 +374,8 @@ int main()
 						osc_mix_3 = 1.0;
 
 						// do the rest of the stuff
-						osc_volume          = osc_target_volume;
-						osc_note_on         = 0;
+						osc_volume  = osc_target_volume;
+						osc_note_on = 0;
 						configure_instrument(osc_instrument);
 
 						stereo_fx_counter++;
@@ -558,32 +415,34 @@ int main()
 		/*  apply channel FX  */
 		/*~~~~~~~~~~~~~~~~~~~~*/
 
-		printf("(Effects)\n");
+		#ifdef DEBUG
+			printf("(Effects)");
+		#endif
 
 		// process delay
-		if (channel_fx[v][1] > 0)
+		if (channel_fx[v][0] > 0)
 		{
 			delay_process(
 				voice_buffer,
 				TOTAL_SAMPLES,
-				(uint32_t)delay_bank[channel_fx[v][1]][0] * 100,
-				(float)   delay_bank[channel_fx[v][1]][1] / 100.0,
-				(float)   delay_bank[channel_fx[v][1]][2] / 100.0,
-				(uint8_t) delay_bank[channel_fx[v][1]][3],
-				(float)   delay_bank[channel_fx[v][1]][4] / 100.0);
+				(uint32_t)delay_bank[channel_fx[v][0]][0] * 100,
+				(float)   delay_bank[channel_fx[v][0]][1] / 100.0,
+				(float)   delay_bank[channel_fx[v][0]][2] / 100.0,
+				(uint8_t) delay_bank[channel_fx[v][0]][3],
+				(float)   delay_bank[channel_fx[v][0]][4] / 100.0);
 		}
 
 		// process reverb
-		if (channel_fx[v][0] > 0)
+		if (channel_fx[v][1] > 0)
 		{
 			reverb_process(
 				voice_buffer,
 				TOTAL_SAMPLES,
-				(float)reverb_bank[channel_fx[v][0]][0] / 100.0,
-				(float)reverb_bank[channel_fx[v][0]][1] / 100.0,
-				(float)reverb_bank[channel_fx[v][0]][2] / 100.0,
-				(float)reverb_bank[channel_fx[v][0]][3] / 100.0,
-				(float)reverb_bank[channel_fx[v][0]][4] / 100.0);
+				(float)reverb_bank[channel_fx[v][1]][0] / 100.0,
+				(float)reverb_bank[channel_fx[v][1]][1] / 100.0,
+				(float)reverb_bank[channel_fx[v][1]][2] / 100.0,
+				(float)reverb_bank[channel_fx[v][1]][3] / 100.0,
+				(float)reverb_bank[channel_fx[v][1]][4] / 100.0);
 		}
 
 		/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
@@ -591,10 +450,17 @@ int main()
 		/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
 		for (uint32_t i = 0; i < TOTAL_SAMPLES; i++)
-			buffer_float[i] += voice_buffer[i] * voice_boost[v];
+			buffer_float[i] += voice_buffer[i] * map(voice_boost[v], 0, 255, 0.0, 2.0);
 
 		// clean up the buffer
 		memset(voice_buffer, 0, TOTAL_SAMPLES * sizeof(float));
+
+		#ifdef DEBUG
+			// let's just see how long it took
+			clock_t voice_end = clock();
+			double time_spent = (double)(voice_end - voice_begin) / CLOCKS_PER_SEC;
+			printf(" - %.2f secs\n", time_spent);
+		#endif
 	}
 
 	// we can free up some memory now
@@ -606,29 +472,40 @@ int main()
 	/*  process output file  */
 	/*~~~~~~~~~~~~~~~~~~~~~~~*/
 
-	printf("Converting to 16-bit...\n");
+	#ifdef DEBUG
+		printf("Normalizing & converting to 16-bit...\n");
+	#endif
 
 	// final output array
 	int16_t *buffer_int = (int16_t*)malloc(TOTAL_SAMPLES * sizeof(int16_t));
+	float_to_sixteen_bit(buffer_float, buffer_int, TOTAL_SAMPLES);
 
-	// squash down to 16-bit, add dither
-	for (uint32_t i = 0; i < TOTAL_SAMPLES; i++)
-	{
-		buffer_float [i] = (buffer_float[i] * MASTER_GAIN) + (noise(0) * DITHER_GAIN);
-		buffer_int   [i] = (int16_t)buffer_float[i];
-	}
-
+	// we'll miss you buffer float
 	free(buffer_float);
 
-	printf("Building wave file...\n");
+	#ifdef DEBUG
+		printf("Building wave file...\n");
+	#endif
+
 	wave_export(buffer_int, TOTAL_SAMPLES);
 
+	// eh, don't need to
 	free(buffer_int);
 
-	// let's just see how long it took
-	clock_t end = clock();
-	double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-	printf("Done! Took %.2f seconds to complete.\n\n", time_spent);
+	#ifdef DEBUG
+		// let's just see how long it took
+		clock_t end = clock();
+		double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+		printf("Done! Took %.2f seconds to complete.\n\n", time_spent);
+	#endif
+
+	// time to listen to the results (on linux only)
+	#ifdef LINUX
+		#ifdef DEBUG
+			printf("It's playback time!\n\n");
+		#endif
+		alsa_playback(buffer_int, TOTAL_SAMPLES);
+	#endif
 
 	return 0;
 }
