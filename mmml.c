@@ -18,13 +18,13 @@
 #define MAXLOOPS         5        // total number of nested loops
 #define TOTAL_NOTES      108      // how many notes we'll generate
 #define NOTE_END         7902.13  // the highest frequency we'll generate
-#define MASTER_TRANSPOSE 37       // master pitch offset
+#define MASTER_TRANSPOSE 38       // master pitch offset
 
 // To work out the mmml tick update rate to BPM conversion,
 // use the following: SAMPLE_RATE/((TARGET_BPM * 32)/60)
 // Be aware that it's slightly off though.
 // 640 is 129 exactly btw, which I don't get??
-#define DEFAULT_TEMPO 640//620
+#define DEFAULT_TEMPO 672 //640
 
 // mmml variables
 float    mmml_volume;

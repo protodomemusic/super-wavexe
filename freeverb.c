@@ -23,7 +23,6 @@
 #define STEREOSPREAD    23
 #define OFFSETROOM      0.7
 
-#define RV_SAMPLE_RATE  44100.0
 #define FREEZEMODE      0.5
 #define TOTAL_CHANNELS  2
 
@@ -168,6 +167,6 @@ void reverb_process(float *input_buffer, int input_length, float v_width, float 
 		input_buffer[i+1] = outr * verb_wet1 + outl * verb_wet2 + input_buffer[i+1] * verb_dry;
 	}
 
-	memset(comb_buf, 0, sizeof comb_buf);
+	memset(comb_buf,    0, sizeof comb_buf);
 	memset(allpass_buf, 0, sizeof allpass_buf);
 }

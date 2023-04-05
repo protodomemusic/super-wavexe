@@ -36,12 +36,12 @@
 // currently only linux supports live playback via the ALSA library
 // make sure to do: apt-get install libasound2-dev
 #ifdef LINUX
-#include <alsa/asoundlib.h>
-#include "alsa-playback.c"
+	#include <alsa/asoundlib.h>
+	#include "alsa-playback.c"
 #endif
 
 // note: definitions here required by wave-export.c
-#define PLAY_TIME      150    // duration of recording in seconds
+#define PLAY_TIME      157    // duration of recording in seconds
 #define SAMPLE_RATE    44100  // cd quality audio
 #define TOTAL_CHANNELS 2      // stereo file
 #define TOTAL_SAMPLES  (PLAY_TIME * TOTAL_CHANNELS) * SAMPLE_RATE
@@ -50,13 +50,11 @@
 #define DRUM_VOICE TOTAL_VOICES - 1
 
 // important definitions
-#define MASTER_GAIN      5700    // convert -1.0 - 1.0 float to 16-bit
-#define DITHER_GAIN      5       // volume of dither noise
 #define OSC_DIVISOR      100     // change this to alter master tuning
 #define TOTAL_VOICES     8       // how many oscillators (plus drum channel) we're calculating
 #define FX_UPDATE_RATE   100     // how many frames before we update the FX parameters
-#define LPF_HIGH         0.5     // the maximum height of the filter
-#define ZERO_CROSS_EVENT 0.005   // what we consider to be a zero crossing
+#define LPF_HIGH         0.3     // the maximum height of the filter
+#define ZERO_CROSS_EVENT 0.006   // what we consider to be a zero crossing
 
 // externals
 #include "instrument-config.h"
@@ -419,6 +417,30 @@ int main()
 			printf("(Effects)");
 		#endif
 
+		// wah on bass channel only (bit of a hack for one song)
+		if (v == DRUM_VOICE - 1)
+		{
+			float   q_value         = 0.008;
+			float   sweep_value     = 0.2;
+			uint8_t sweep_direction = 0;
+
+			for (uint32_t i = 0; i < TOTAL_SAMPLES; i += 2)
+			{
+				if (sweep_value >= 0.0005 && sweep_direction == 0)
+					sweep_value -= 0.00001;
+				if (sweep_value <= 0.2 && sweep_direction == 1)
+					sweep_value += 0.00001;
+
+				if (sweep_value < 0.0005 && sweep_direction == 0)
+					sweep_direction = 1;
+				if (sweep_value > 0.2 && sweep_direction == 1)
+					sweep_direction = 0;
+
+				for (uint8_t c = 0; c < TOTAL_CHANNELS; ++c)
+					voice_buffer[i + c] = resonant_LPF(voice_buffer[i + c], sweep_value, q_value, c);
+			}
+		}
+
 		// process delay
 		if (channel_fx[v][0] > 0)
 		{
@@ -443,7 +465,7 @@ int main()
 				(float)reverb_bank[channel_fx[v][1]][2] / 100.0,
 				(float)reverb_bank[channel_fx[v][1]][3] / 100.0,
 				(float)reverb_bank[channel_fx[v][1]][4] / 100.0);
-		}
+		}			
 
 		/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 		/*  export channel to master  */
@@ -468,6 +490,24 @@ int main()
 	free(drum_data);
 	free(voice_buffer);
 
+	/*~~~~~~~~~~~~~~~~~~~*/
+	/*  apply master FX  */
+	/*~~~~~~~~~~~~~~~~~~~*/
+
+	#ifdef DEBUG
+		printf("Applying 2-band master EQ...\n");
+	#endif
+
+	// master highpass filter
+	for (uint32_t i = 0; i < TOTAL_SAMPLES; i += 2)
+		for (uint8_t c = 0; c < TOTAL_CHANNELS; ++c)
+			buffer_float[i+c] = resonant_HPF(buffer_float[i+c], 0.04, 0.05, c);
+
+	// master lowpass filter
+	for (uint32_t i = 0; i < TOTAL_SAMPLES; i += 2)
+		for (uint8_t c = 0; c < TOTAL_CHANNELS; ++c)
+			buffer_float[i+c] = resonant_LPF(buffer_float[i+c], 0.5, 0.4, c);
+
 	/*~~~~~~~~~~~~~~~~~~~~~~~*/
 	/*  process output file  */
 	/*~~~~~~~~~~~~~~~~~~~~~~~*/
@@ -489,9 +529,6 @@ int main()
 
 	wave_export(buffer_int, TOTAL_SAMPLES);
 
-	// eh, don't need to
-	free(buffer_int);
-
 	#ifdef DEBUG
 		// let's just see how long it took
 		clock_t end = clock();
@@ -506,6 +543,9 @@ int main()
 		#endif
 		alsa_playback(buffer_int, TOTAL_SAMPLES);
 	#endif
+
+	// eh, don't need to
+	free(buffer_int);
 
 	return 0;
 }

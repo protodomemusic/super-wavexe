@@ -24,11 +24,11 @@ float resonant_LPF (float input, float cutoff, float resonance, uint8_t channel)
 	return last_output[channel] += momentum[channel] + distance_to_go * resonance;
 }
  
-// float resonant_HPF (float input, float cutoff, float resonance, uint8_t channel)
-// {
-// 	last_output[channel] += momentum[channel] - last_input[channel] + input;
-// 	last_input[channel] = input;
-// 	momentum[channel] = momentum[channel] * resonance - last_output[channel] * cutoff;
+float resonant_HPF (float input, float cutoff, float resonance, uint8_t channel)
+{
+	last_output[channel] += momentum[channel] - last_input[channel] + input;
+	last_input[channel] = input;
+	momentum[channel] = momentum[channel] * resonance - last_output[channel] * cutoff;
 
-// 	return last_output[channel];
-// }
+	return last_output[channel];
+}
