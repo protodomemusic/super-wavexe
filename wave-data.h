@@ -59,7 +59,7 @@ static uint8_t drum_sounds [TOTAL_DRUM_SOUNDS][TOTAL_DRUM_SOUND_PARAMETERS] =
 //    wav | frq | vol | ptc | vol |  ptc |       //
 //-----------------------------------------------//
 // 0: c  kick               |            |
-   {     1,   70,   25,  240,  230,   255,  180   },
+   {     1,   70,   25,  240,  230,   255,  110   },
 // 1: c+ snare long         |            |
    {     4,   16,   15,   80,   18,    20,  220   },
 // 2: d  snare short        |            |
@@ -159,8 +159,8 @@ void drum_generator(float *input_drum_data, float *input_wavecycle_array)
 			// combine noise and oscillator
 			final_output = (wave_output + noise_output) / 2;
 
-			// add a little EQ notch to make snare a bit punchier
-			final_output = (final_output + (resonant_LPF(final_output, 0.003, 0.01, 0) / 2)) * drum_boost;
+			// add a little EQ notch to make snare a bit punchier, boost the low end as we EQ later
+			final_output = (resonant_LPF(final_output, 0.01, 0.4, 0) + (resonant_LPF(final_output, 0.0001, 0.01, 1))) * drum_boost;
 
 			// save sample to drum data
 			if (s % DRUM_PITCH == 0)
