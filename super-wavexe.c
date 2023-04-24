@@ -417,33 +417,34 @@ int main()
 			printf("(Effects)");
 		#endif
 
-		// wah on bass channel only (bit of a hack for one song)
-		if (v == DRUM_VOICE - 1)
-		{
-			#define CUTOFF_HIGH  0.2
-			#define CUTOFF_LOW   0.001
-			#define SWEEP_SPEED  0.00001
-			#define Q_VALUE      0.1
+		// // wah on bass channel only (bit of a hack for one song)
+		// // i didn't like the wah in the end, but you might!
+		// if (v == DRUM_VOICE - 1)
+		// {
+		// 	#define CUTOFF_HIGH  0.2
+		// 	#define CUTOFF_LOW   0.001
+		// 	#define SWEEP_SPEED  0.00001
+		// 	#define Q_VALUE      0.1
 
-			float   sweep_value     = 0.2;
-			uint8_t sweep_direction = 0;
+		// 	float   sweep_value     = 0.2;
+		// 	uint8_t sweep_direction = 0;
 
-			for (uint32_t i = 0; i < TOTAL_SAMPLES; i += 2)
-			{
-				if (sweep_value >= CUTOFF_LOW  && sweep_direction == 0)
-					sweep_value -= SWEEP_SPEED;
-				if (sweep_value <= CUTOFF_HIGH && sweep_direction == 1)
-					sweep_value += SWEEP_SPEED;
+		// 	for (uint32_t i = 0; i < TOTAL_SAMPLES; i += 2)
+		// 	{
+		// 		if (sweep_value >= CUTOFF_LOW  && sweep_direction == 0)
+		// 			sweep_value -= SWEEP_SPEED;
+		// 		if (sweep_value <= CUTOFF_HIGH && sweep_direction == 1)
+		// 			sweep_value += SWEEP_SPEED;
 
-				if (sweep_value < CUTOFF_LOW  && sweep_direction == 0)
-					sweep_direction = 1;
-				if (sweep_value > CUTOFF_HIGH && sweep_direction == 1)
-					sweep_direction = 0;
+		// 		if (sweep_value < CUTOFF_LOW  && sweep_direction == 0)
+		// 			sweep_direction = 1;
+		// 		if (sweep_value > CUTOFF_HIGH && sweep_direction == 1)
+		// 			sweep_direction = 0;
 
-				for (uint8_t c = 0; c < TOTAL_CHANNELS; ++c)
-					voice_buffer[i + c] = resonant_LPF(voice_buffer[i + c], sweep_value, Q_VALUE, c);
-			}
-		}
+		// 		for (uint8_t c = 0; c < TOTAL_CHANNELS; ++c)
+		// 			voice_buffer[i + c] = resonant_LPF(voice_buffer[i + c], sweep_value, Q_VALUE, c);
+		// 	}
+		// }
 
 		// process delay
 		if (channel_fx[v][0] > 0)

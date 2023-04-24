@@ -16,13 +16,13 @@ rm output.wav
 
 ./mmml-compiler -f input.mmml -t wavexe -c 8
 
-gcc super-wavexe.c -O3 -o super-wavexe -lm -lasound
+gcc super-wavexe.c -Os -o super-wavexe -lm -lasound
 
 # if you want tiny executables, uncomment
 # below, comment out the above (and install
 # upx)
 
-#gcc super-wavexe.c -O3 -o super-wavexe-big -lm -lasound
+#gcc super-wavexe.c -Os -o super-wavexe-big -lm -lasound
 #upx -9 -o super-wavexe super-wavexe-big
 #rm super-wavexe-big
 

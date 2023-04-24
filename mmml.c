@@ -24,7 +24,7 @@
 // use the following: SAMPLE_RATE/((TARGET_BPM * 32)/60)
 // Be aware that it's slightly off though.
 // 640 is 129 exactly btw, which I don't get??
-#define DEFAULT_TEMPO 672 //640
+#define DEFAULT_TEMPO 672
 
 // mmml variables
 float    mmml_volume;
