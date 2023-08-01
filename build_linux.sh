@@ -6,24 +6,21 @@
 
 # get rid of old stuff
 
-rm super-wavexe
+rm src/super-wavexe
 rm output.wav
 
-# note this will fail if you've just
-# downloaded from the repository you can
-# ignore it though (unless you want to write
-# your own music)
+# note this will fail if you've just downloaded from the repository
+# you can ignore it though (unless you want to write your own music)
+python3 compiler/mega-mmml.py songs/default/default.4ml
+mv 4ml-data.h songs/default/
 
-./mmml-compiler -f input.mmml -t wavexe -c 8
-
-gcc super-wavexe.c -Os -o super-wavexe -lm -lasound
+gcc src/super-wavexe.c -O3 -o src/super-wavexe -lm -lasound
 
 # if you want tiny executables, uncomment
-# below, comment out the above (and install
-# upx)
+# below, comment out the above (and install upx)
 
-#gcc super-wavexe.c -Os -o super-wavexe-big -lm -lasound
-#upx -9 -o super-wavexe super-wavexe-big
-#rm super-wavexe-big
+# gcc src/super-wavexe.c -O3 -o src/super-wavexe-big -lm -lasound
+# upx -9 -o src/super-wavexe src/super-wavexe-big
+# rm src/super-wavexe-big
 
-./super-wavexe
+./src/super-wavexe

@@ -12,12 +12,9 @@
 *  DATE:         29th December 2022
 **************************************************************/
 
-// the data file to read from
-#include "wavexe-mmml-data.h"
-
 #define MAXLOOPS         5        // total number of nested loops
 #define TOTAL_NOTES      108      // how many notes we'll generate
-#define NOTE_END         7902.13  // the highest frequency we'll generate
+#define NOTE_END         8174     // the highest frequency we'll generate
 #define MASTER_TRANSPOSE 38       // master pitch offset
 
 // To work out the mmml tick update rate to BPM conversion,
@@ -25,6 +22,12 @@
 // Be aware that it's slightly off though.
 // 640 is 129 exactly btw, which I don't get??
 #define DEFAULT_TEMPO 672
+
+// WARNING! Tempos must be declared in each channel.
+// This is a consequence of running the mmml data separately
+// for each channel.
+// Is this garbage behavior? Yes. Should I change it?
+// Also yes.
 
 // mmml variables
 float    mmml_volume;
@@ -45,7 +48,7 @@ uint16_t tick_counter;
 uint16_t tick_speed;
 
 // run once at startup to initialize μMML variables
-void mmml_setup(uint8_t v)
+void _4ml_setup(uint8_t v)
 {
 	tick_counter = 0;
 	tick_speed   = DEFAULT_TEMPO;
@@ -78,7 +81,7 @@ void mmml_setup(uint8_t v)
 }
 
 // call every frame
-void mmml_update(float *pitch_io, float *volume_io, uint8_t *instrument_io, uint8_t *note_on_io, uint8_t *panning_io, uint8_t v)
+void _4ml_update(float *pitch_io, float *volume_io, uint8_t *instrument_io, uint8_t *note_on_io, uint8_t *panning_io, uint8_t v)
 {
 	// temporary data storage variables
 	uint8_t  buffer1 = 0;
@@ -150,7 +153,8 @@ void mmml_update(float *pitch_io, float *volume_io, uint8_t *instrument_io, uint
 				// transpose
 				else if (buffer2 == 4)
 				{
-					mmml_transpose  = buffer3;
+					// as of 4ML these are stored as unsigned bytes
+					mmml_transpose = buffer3 - 100;
 					data_pointer += 2;
 				}
 				// instrument
@@ -168,7 +172,8 @@ void mmml_update(float *pitch_io, float *volume_io, uint8_t *instrument_io, uint
 				// panning
 				else if (buffer2 == 7)
 				{
-					*panning_io = buffer3;
+					// as of 4ML these are stored as unsigned bytes
+					*panning_io = buffer3 - 100;
 					data_pointer += 2;
 				}
 				// channel end
@@ -203,7 +208,7 @@ void mmml_update(float *pitch_io, float *volume_io, uint8_t *instrument_io, uint
 					mmml_octave = buffer2;
 				// volume
 				if(buffer1 == 14)
-					mmml_volume = map(buffer2, 0, 8, 0.0, 1.0);
+					mmml_volume = map(buffer2 + 1, 0, 8, 0.0, 1.0);
 
 				data_pointer++;
 				goto LOOP; // see comment above previous GOTO

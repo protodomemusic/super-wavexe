@@ -1,23 +1,21 @@
-/**************************************************************
+/*******************************************************************************
 *  FILENAME:     instrument-config.h
-*  DESCRIPTION:  Tables for instrument/effects configuration.
+*  DESCRIPTION:  Default tables for instrument/effects configuration. Duplicate
+*                this file before you edit it - it has useful info in it!
 *
-*                Edit your instrument properties in the first
-*                table, then select which effect you'd like
-*                applied to each voice in the second.
+*                Edit your instrument properties in the first table, then select
+*                which effect you'd like applied to each voice in the second.
 *
-*                Unfortunately, you can't change the effects
-*                over time just yet, though (as a note) you
-*                could have a new 'X0-255' MMML command. It
-*                indexes the sample it was at when the command
-*                was seen and then, when effects are later
-*                applied, it switches between presets when the
-*                stored sample location is reached. I guess?
+*                Unfortunately, you can't change the effects over time just yet,
+*                though (as a note) you could have a new 'X0-255' 4ML command.
+*                It could index the sample it was at when the command was last
+*                seen and then, when effects are later applied, it would switch
+*                between presets when the stored sample location was reached.
 *
 *                See diagram for effects chain.
 *
 *  DATE:         29th March 2023
-***************************************************************
+********************************************************************************
 
 Here's a quick run-down of effects and how they work. I picked
 stuff that helped 'de-FM' and rough up the FM waveforms a bit.
@@ -110,7 +108,7 @@ nice to have volume controls at multiple levels (there's three
 at the moment, a pre-effect MMML 'v' command, a post-instrument
 effect volume, and a this is a 'post-everything' gain.)
 
-**************************************************************/
+*******************************************************************************/
 
 #define TOTAL_INSTRUMENTS     9
 #define INSTRUMENT_PARAMETERS 12
@@ -133,11 +131,9 @@ static uint8_t instrument_bank [TOTAL_INSTRUMENTS][INSTRUMENT_PARAMETERS] =
    {  0,  0,  3,     1,   252,    190,    255,     10,      0,     0,    120,    190,},
 // 5: funky rhodes           |       |               |              |       |       |
    {  3,  1,  0,    20,    20,     20,    255,     90,    240,   200,    120,     70,},
-// 6: gritty bass (but quiet)|       |               |              |       |       |
-   {  0,  0,  3,     1,   252,    190,    255,     10,      0,     0,    120,    100,},
-// 7: clicky bass            |       |               |              |       |       |
-   { 10,  0,  0,     1,     1,    190,    255,     10,      0,     0,    120,    180,},
-// 8: soft rhodes            |       |               |              |       |       |
+// 6: clicky bass            |       |               |              |       |       |
+   { 10,  0,  0,     1,     1,    190,    255,     10,      0,     0,    120,    190,},
+// 7: soft rhodes            |       |               |              |       |       |
    {  0,  0,  0,   110,    20,    130,    255,     90,      0,     0,    100,     45,},
 //----------------------------------------------------------------------------------//
 };
@@ -150,20 +146,18 @@ static uint8_t channel_fx [TOTAL_VOICES][TOTAL_FX] =
 // reverb | delay //
 //----------------//
 // voice #0
-   {   1,    3  },
-// voice #1
-   {   2,    3  },
-// voice #2
-   {   1,    3  },
-// voice #3
-   {   3,    3  },
-// voice #4
-   {   4,    3  },
-// voice #5
-   {   3,    4  },
-// voice #6
    {   0,    1  },
-// voice #7
+// voice #1
+   {   1,    4  },
+// voice #2
+   {   1,    4  },
+// voice #3
+   {   1,    4  },
+// voice #4
+   {   2,    4  },
+// voice #5
+   {   2,    4  },
+// voice #6
    {   0,    1  },
 //----------------//
 };
@@ -212,21 +206,10 @@ static uint8_t reverb_bank [TOTAL_REVERB_PRESETS][TOTAL_REVERB_PARAMETERS] =
 
 static uint8_t voice_boost [TOTAL_VOICES] =
 {
-//------------------------------------------------//
-//  <---------------- osc ----------------> | drm |
-//  #0  | #1  | #2  | #3  | #4  | #5  | #6  | #7  |
-//------|-----|-----|-----|-----|-----|-----|-----//
-     127,  127,  127,  127,  80,  127,  125,  80
-//------------------------------------------------//
+//------------------------------------------//
+//  <-------------------------------> | drm |
+//  #0  | #1  | #2  | #3  | #4  | #5  | #6  |
+//------|-----|-----|-----|-----|-----|-----//
+     180,  127,  127,  127,  127,  127, 110
+//------------------------------------------//
 };
-
-// // silence stuff for mixing
-// static uint8_t voice_boost [TOTAL_VOICES] =
-// {
-// //------------------------------------------------//
-// //  <---------------- osc ----------------> | drm |
-// //  #0  | #1  | #2  | #3  | #4  | #5  | #6  | #7  |
-// //------|-----|-----|-----|-----|-----|-----|-----//
-//        0,    0,    0,    0,    0,    0,    0,  140
-// //------------------------------------------------//
-// };

@@ -1,24 +1,41 @@
-/**************************************************************
+/*******************************************************************************
 *  FILENAME:     super-wavexe.c
 *  DESCRIPTION:  Super Executable Wavetable Synthesizer
 *
-*  NOTES:        A little wavetable synthesizer optimized to
-*                make tiny executable music files.
+*  NOTES:        A little wavetable synthesizer optimized to make tiny
+*                executable music files.
 * 
 *                An upgrade of:
-*                https://github.com/protodomemusic/wavexe
-* 
-*                Sequencing powered by:
+*                https://github.com/protodomemusic/wavexe and
 *                https://github.com/protodomemusic/mmml
 *
+*                You can find the new compiler (mega-mmml.py) in this repo under
+*                '/compiler'. Look at the shell scripts in root for how to build
+*                a song.
+*
+*                For information on how to write your own music using this
+*                engine, check out README.md.
+*
 *                TO DO NEXT:
-*                - Portamento
-*                - Vibrato/sweeps
+*                - Panning can be a bit weird. -100% has a lot of signal in the
+*                  right channel (bad), whereas 100% has no info in the left
+*                  channel (good).
+*                - Looping on final channel has issues. If the sequencer reaches
+*                  the end of material, the behavior can be a bit weird.
+*                - Tempo commands only affect the channel they're in. I guess
+*                  this isn't a bug per se, but it's weird and annoying in
+*                  practice.
+*                - Editing, and pointing to, a new instrument-config.h for every
+*                  song is also annoying and weird, like above.
+*                - Bass is weak. Need to sort that really.
+*                - Portamento would be dope.
+*                - Vibrato/sweeps would be dope 2.
 *
 *  AUTHOR:       Blake 'PROTODOME' Troise
 *  PLATFORM:     Command Line Application (MacOS / Linux)
-*  DATE:         1st April 2022
-**************************************************************/
+*  DATE:         Initial: 1st April 2022
+*                Update:  29th July 2023
+*******************************************************************************/
 
 // libraries
 #include <stdio.h>
@@ -40,8 +57,13 @@
 	#include "alsa-playback.c"
 #endif
 
+// the custom data files to read from, currently looking at the
+// default song files
+#include "../songs/default/4ml-data.h"
+#include "../songs/default/instrument-config.h"
+
 // note: definitions here required by wave-export.c
-#define PLAY_TIME      157    // duration of recording in seconds
+#define PLAY_TIME      15     // duration of recording in seconds
 #define SAMPLE_RATE    44100  // cd quality audio
 #define TOTAL_CHANNELS 2      // stereo file
 #define TOTAL_SAMPLES  (PLAY_TIME * TOTAL_CHANNELS) * SAMPLE_RATE
@@ -51,17 +73,15 @@
 
 // important definitions
 #define OSC_DIVISOR      100     // change this to alter master tuning
-#define TOTAL_VOICES     8       // how many oscillators (plus drum channel) we're calculating
 #define FX_UPDATE_RATE   100     // how many frames before we update the FX parameters
 #define LPF_HIGH         0.3     // the maximum height of the filter
 #define ZERO_CROSS_EVENT 0.006   // what we consider to be a zero crossing
 
 // externals
-#include "instrument-config.h"
 #include "handy-functions.h"
 #include "simple-filter.c"
 #include "wave-data.h"
-#include "mmml.c"
+#include "4ml.c"
 #include "freeverb.c"
 #include "simple-delay.c"
 #include "wave-export.c"
@@ -190,7 +210,7 @@ int main()
 		#endif
 
 		// initialize MMML variables
-		mmml_setup(v);
+		_4ml_setup(v);
 
 		// oscillator variables
 		double   osc_accumulator   = 0;
@@ -406,7 +426,7 @@ int main()
 			/*  process sequence data  */
 			/*~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
-			mmml_update(&osc_pitch,&osc_target_volume,&osc_instrument,&osc_note_on,&osc_panning,v);
+			_4ml_update(&osc_pitch,&osc_target_volume,&osc_instrument,&osc_note_on,&osc_panning,v);
 		}
 
 		/*~~~~~~~~~~~~~~~~~~~~*/
@@ -416,35 +436,6 @@ int main()
 		#ifdef DEBUG
 			printf("(Effects)");
 		#endif
-
-		// // wah on bass channel only (bit of a hack for one song)
-		// // i didn't like the wah in the end, but you might!
-		// if (v == DRUM_VOICE - 1)
-		// {
-		// 	#define CUTOFF_HIGH  0.2
-		// 	#define CUTOFF_LOW   0.001
-		// 	#define SWEEP_SPEED  0.00001
-		// 	#define Q_VALUE      0.1
-
-		// 	float   sweep_value     = 0.2;
-		// 	uint8_t sweep_direction = 0;
-
-		// 	for (uint32_t i = 0; i < TOTAL_SAMPLES; i += 2)
-		// 	{
-		// 		if (sweep_value >= CUTOFF_LOW  && sweep_direction == 0)
-		// 			sweep_value -= SWEEP_SPEED;
-		// 		if (sweep_value <= CUTOFF_HIGH && sweep_direction == 1)
-		// 			sweep_value += SWEEP_SPEED;
-
-		// 		if (sweep_value < CUTOFF_LOW  && sweep_direction == 0)
-		// 			sweep_direction = 1;
-		// 		if (sweep_value > CUTOFF_HIGH && sweep_direction == 1)
-		// 			sweep_direction = 0;
-
-		// 		for (uint8_t c = 0; c < TOTAL_CHANNELS; ++c)
-		// 			voice_buffer[i + c] = resonant_LPF(voice_buffer[i + c], sweep_value, Q_VALUE, c);
-		// 	}
-		// }
 
 		// process delay
 		if (channel_fx[v][0] > 0)

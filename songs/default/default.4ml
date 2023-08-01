@@ -1,0 +1,99 @@
+/*******************************************************************************
+* TITLE      : 4ML Template
+* COMPOSER   : 
+* PROGRAMMER : You!
+* DATE       : 
+* NOTES      : A blank template ready for 4ML commands. Here's a quick
+*              cheatsheet to get started (an 'X' indicates a required value):
+*
+*              CX           : Declare a channel
+*              PX           : Declare a pattern
+*              cX - gX      : Note values (X = duration)
+*              rX           : Rest / silence (X = duration)
+*              1,2,4,8,16,
+*              32,64,128    : Possible note / rest durations
+*              X.           : Dotted note (X plus an additional 1/2 X)
+*              + or #       : Sharpen a note
+*              o1-6         : Channel octave (1 lowest, 6 highest)
+*              < or >       : Decrease, or increase, the current octave
+*              v1-8         : Channel volume/velocity
+*              [2-256       : Start X number of loops
+*              ]            : End a loop
+*              p1-256       : Call a pattern
+*              t1-256       : Set the pattern's tempo
+*              @1-256       : Select an instrument
+*              K -100 - 100 : Transpose material X semitones
+*              s -100 - 100 : Setting panning (0 is centered)
+*
+*              Some quick tips:
+*
+*              -> The 4ML structure is flexible! You can label your channel /
+*                 pattern material wherever you like in the file. See the demo
+*                 song below for an example.
+*
+*              -> You can nest up to five loops - or four in a macro.
+*                 e.g.: "[X[X[X[X[X ]]]]]"
+*
+*              -> Notes don't need multiple, identical durations.
+*                 e.g.: "cX cX cX" could be written as "cX c c"
+*
+*              -> Careful when jumping to a macro, it won't remember your
+*                 octave! Best practice is to declare an octave at the start of
+*                 each macro, and when you return.
+*                 e.g.: "@ oX" and "mX oX"
+*
+*              -> Save space whenever and wherever you can! Arpeggios can be
+*                 condensed into loops and repeated passages should become
+*                 patterns.
+*
+*              -> Channels will loop back to the beginning when they
+*                 have completed reading their data.
+*
+*              -> Tempo commands can be placed in any channel, but only apply to
+*                 that channel at that point. If you want to globally change
+*                 tempi you must ensure they are triggered at the same point in
+*                 each channel (yes, very stupid, I know).
+*
+*              I hope you have fun writing tiny music! If you have any questions
+*              / suggestions / corrections contact me at: hello@protodome.com
+*******************************************************************************/
+
+/* a little demo song to get you going. i know it sucks, listen to sine-time.4ml
+for a good example of what can be done */
+
+; chord pattern
+P1 [2 v7 c8 r16 c r4. v6 c16 r8. c16 r ]
+
+; bar 1 - 2
+C1 [2 v8 @6 o2 K0 p1
+C2 [2 v7 @2 s-50 o3 K7 p1
+C3 [2 v7 @2 s50 o3 K11 p1
+C4 [2 v7 @2 o4 K2 p1
+C5 [2 @1 K0 p2
+
+; arpeggio #1
+P2 [8 v5 o5 s-100 e32 v3 s100 b v5 s100 g v3 s-100 e < v5 s-100 g > v3 s100 g 
+   < v5 s100 b v3 s-100 g ]
+
+; bar 3 - 4
+C1 o2 K-2 p1 ]
+C2 o3 K5 p1  ]
+C3 o3 K9 p1  ]
+C4 o4 K0 p1  ]
+C5 K-2 p2    ]
+
+; arpeggio #2
+C6 @7 [16 o5 v4 d16 < v3 g > v4 e v3 d v4 c v3 e < v4 g v3 c ]
+
+; drum beat
+C7 [8 v8 c16 v6 d+ v5 f v8 d+ c+ v7 e v8 d+ c d+ d128c+32r64. d+16 e c+ v6 d+ v8
+   c d+ ]
+
+; weird stuff can happen on loop, so just silence everything
+C1 [255 r1 ]
+C2 [255 r1 ]
+C3 [255 r1 ]
+C4 [255 r1 ]
+C5 [255 r1 ]
+C6 [255 r1 ]
+C7 [255 r1 ]

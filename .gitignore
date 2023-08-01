@@ -7,3 +7,6 @@ super-wavexe
 .DS_Store
 a.out
 mmml-compiler
+.vs/VSWorkspaceState.json
+.vs/ProjectSettings.json
+.vs/slnx.sqlite

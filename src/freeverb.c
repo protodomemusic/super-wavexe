@@ -1,16 +1,17 @@
 /*******************************************************************************
- * 
- * Public domain C implementation of the original freeverb, with the addition of
- * support for sample rates other than 44.1khz. Written by rxi, found at:
- * https://gist.github.com/rxi/e5488c6660154329ddfc4a7a7d2997f8
- *
- * Classic freeverb C++ version written by Jezar at Dreampoint, June 2000
- *
- * Edits here are alterations to rxi's C version to make it as portable as
- * possible (some languages don't allow passing of structs into functions, nor
- * arrays in structs).
- * 
- *******************************************************************************/
+*  FILENAME:     freeverb.c
+*  DESCRIPTION:  Public domain C implementation of the original freeverb, with
+*                the addition of support for sample rates other than 44.1khz.
+*                Written by rxi, found at:
+*                https://gist.github.com/rxi/e5488c6660154329ddfc4a7a7d2997f8
+*                Classic freeverb C++ version written by Jezar at Dreampoint,
+*                June 2000
+*
+*                Edits here are alterations to rxi's C version to make it as
+*                portable as possible (some languages don't allow passing of
+*                structs into functions, nor arrays in structs).
+*  DATE:         18th April 2022
+*******************************************************************************/
 
 #define NUMCOMBS        3
 #define NUMALLPASSES    2
