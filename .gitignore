@@ -1,12 +1,4 @@
-
-build_chromeos.sh
-build_macos.sh
 output.wav
 plot-wavetable-tool.py
-super-wavexe
 .DS_Store
-a.out
-mmml-compiler
-.vs/VSWorkspaceState.json
-.vs/ProjectSettings.json
-.vs/slnx.sqlite
+src/super-wavexe
