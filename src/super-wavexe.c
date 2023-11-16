@@ -154,9 +154,9 @@ int main()
 	trig_tables_init();
 
 	// where we'll put the final mix, individual voice, and wavecycle data
-	float *buffer_float   = (float*)malloc(TOTAL_SAMPLES  * sizeof(float));
-	float *voice_buffer   = (float*)malloc(TOTAL_SAMPLES  * sizeof(float));
-	float *wavecycle_data = (float*)malloc(WAVECYCLE_SIZE * (TOTAL_WAVECYCLES + 1) * sizeof(float));
+	float *buffer_float   = (float*)calloc(TOTAL_SAMPLES, sizeof(float));
+	float *voice_buffer   = (float*)calloc(TOTAL_SAMPLES,  sizeof(float));
+	float *wavecycle_data = (float*)calloc(WAVECYCLE_SIZE * (TOTAL_WAVECYCLES + 1), sizeof(float));
 
 	#ifdef DEBUG
 		printf("Building wavecycles...\n");
@@ -165,7 +165,7 @@ int main()
 	generate_wavecycles(wavecycle_data);
 
 	// where we'll put drum data
-	float *drum_data = (float*)malloc(TOTAL_DRUM_DATA_SIZE * sizeof(float));
+	float *drum_data = (float*)calloc(TOTAL_DRUM_DATA_SIZE, sizeof(float));
 
 	#ifdef DEBUG
 		printf("Building drums...\n");
@@ -175,7 +175,7 @@ int main()
 
 	// fx variables
 	uint16_t fx_timer;
-	uint8_t  fx_update_flag [TOTAL_VOICES];
+	uint8_t  fx_update_flag [TOTAL_VOICES] = { 0 };
 
 	#ifdef DEBUG
 		uint32_t debug_song_buffer_size    = TOTAL_SAMPLES  * sizeof(float);
@@ -231,7 +231,7 @@ int main()
 		// stereo offset variables
 		float tan_smoothing_l = 0.0;
 		float tan_smoothing_r = 0.0;
-		uint8_t stereo_fx_counter;
+		uint8_t stereo_fx_counter = 0;
 
 		// initial parameters
 		configure_instrument(0);
@@ -519,7 +519,7 @@ int main()
 	#endif
 
 	// final output array
-	int16_t *buffer_int = (int16_t*)malloc(TOTAL_SAMPLES * sizeof(int16_t));
+	int16_t *buffer_int = (int16_t*)calloc(TOTAL_SAMPLES, sizeof(int16_t));
 	float_to_sixteen_bit(buffer_float, buffer_int, TOTAL_SAMPLES);
 
 	// we'll miss you buffer float

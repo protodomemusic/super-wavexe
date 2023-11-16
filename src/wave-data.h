@@ -263,4 +263,6 @@ void generate_wavecycles(float *input_wavecycle_array)
 		for (uint16_t w = 0; w < zero_crossing_offset; w++)
 			input_wavecycle_array[(w + zero_crossing_offset) + WAVECYCLE_SIZE * i] = wave_data[w];
 	}
+
+	free(wave_data);
 }
