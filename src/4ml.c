@@ -76,8 +76,8 @@ void _4ml_setup(uint8_t v)
 	}
 
 	// get locations of data from file
-	data_pointer = (uint8_t)mmml_data[v * 2] << 8;
-	data_pointer = data_pointer | (uint8_t)mmml_data[(v*2)+1];
+	data_pointer = (uint8_t)_4ml_data[v * 2] << 8;
+	data_pointer = data_pointer | (uint8_t)_4ml_data[(v*2)+1];
 }
 
 // call every frame
@@ -101,15 +101,15 @@ void _4ml_update(float *pitch_io, float *volume_io, uint8_t *instrument_io, uint
 
 			// Temporary storage of data for quick processing.
 			// first nibble of data
-			buffer1 = ((uint8_t)mmml_data[data_pointer] >> 4);
+			buffer1 = ((uint8_t)_4ml_data[data_pointer] >> 4);
 			// second nibble of data
-			buffer2 = (uint8_t)mmml_data[data_pointer] & 0x0F;
+			buffer2 = (uint8_t)_4ml_data[data_pointer] & 0x0F;
 
 			// function command
 			if (buffer1 == 15)
 			{
 				// Another buffer for commands that require an additional byte.
-				buffer3 = (uint8_t)mmml_data[data_pointer + 1];
+				buffer3 = (uint8_t)_4ml_data[data_pointer + 1];
 
 				// loop start
 				if (buffer2 == 0)
@@ -141,8 +141,8 @@ void _4ml_update(float *pitch_io, float *volume_io, uint8_t *instrument_io, uint
 				{
 					pointer_location = data_pointer + 2;
 					
-					data_pointer = (uint8_t)mmml_data[(buffer3 + TOTAL_VOICES) * 2] << 8;
-					data_pointer = data_pointer | (uint8_t)mmml_data[((buffer3 + TOTAL_VOICES) * 2) + 1];
+					data_pointer = (uint8_t)_4ml_data[(buffer3 + TOTAL_VOICES) * 2] << 8;
+					data_pointer = data_pointer | (uint8_t)_4ml_data[((buffer3 + TOTAL_VOICES) * 2) + 1];
 				}
 				// tempo
 				else if (buffer2 == 3)
@@ -188,8 +188,8 @@ void _4ml_update(float *pitch_io, float *volume_io, uint8_t *instrument_io, uint
 					// ...If not, go back to the start.
 					else
 					{
-						data_pointer = (uint8_t) mmml_data[(v*2)] << 8;
-						data_pointer = data_pointer | (uint8_t) mmml_data[(v*2)+1];
+						data_pointer = (uint8_t) _4ml_data[(v*2)] << 8;
+						data_pointer = data_pointer | (uint8_t) _4ml_data[(v*2)+1];
 					}
 				}
 

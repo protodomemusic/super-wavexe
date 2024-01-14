@@ -88,6 +88,10 @@ Transpose
 --
 Also in: PPMCK, MGSC, XPMCK
 
+F<0-255>
+Miscellaneous Expanded Functions
+For some platforms there are musical or system requirements that make more sense than others. This kind of stuff I don't really want to permanently embed into core 4ML syntax, so there's the generic 'F' command. At this moment in time (2024/01/10), it only reads the next byte, but it could theoretically read another byte beyond that for further adaptability. If you (likely me a few years from now) are thinking about supporting these functions for some new future player, it's kinda not required, so don't sweat it.
+
 #===================#
 # command reference #
 #===================#
@@ -102,7 +106,7 @@ Also in: PPMCK, MGSC, XPMCK
 | d+   | 0100     | 4   | note - d#  |  | b         | 1100     | C   | note - b   |
 | e    | 0101     | 5   | note - e   |  | o,<,>     | 1101     | D   | octave     |
 | f    | 0110     | 6   | note - f   |  | v         | 1110     | E   | volume     |
-| f+   | 0111     | 7   | note - f#  |  | [,],m,t,@ | 1111     | F   | function   | ----
+| f+   | 0111     | 7   | note - f#  |  | [,],m,t.. | 1111     | F   | function   | ----
 --------------------------------------  -------------------------------------------     |
 ----------------------------------------------------------                              |
 |      |        |     | READS NEXT |                     |                              |
@@ -122,9 +126,15 @@ Also in: PPMCK, MGSC, XPMCK
 |      | 1011   | B   |            |                     |
 |      | 1100   | C   |            |                     |
 |      | 1101   | D   |            |                     |
-|      | 1110   | E   |            |                     |
-| N/A  | 1111   | F   | no         | channel/macro end   |
-----------------------------------------------------------
+| F    | 1110   | E   | yes        | misc functions      | ---
+| N/A  | 1111   | F   | no         | channel/macro end   |    |
+----------------------------------------------------------    |
+--------------------------------------------                  |
+| 4ML  | BYTECODE | HEX | COMMAND          | <----------------
+--------------------------------------------
+| 1    | 0000     | 0   | volume increment |
+| 2    | 0001     | 1   | volume decrement |
+--------------------------------------------
 
 #=========================#
 # note duration reference #

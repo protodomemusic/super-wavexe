@@ -1,0 +1,678 @@
+/*******************************************************************************
+* TITLE      : The Legend of Zelda Game Boy Medley
+* COMPOSER   : Koji Kondo, Yasuaki Iwata, Blake 'PROTODOME' Troise
+* PROGRAMMER : Blake 'PROTODOME' Troise
+* DATE       : 14th January 2024
+* NOTES      : Written for the concert 'After Hours: Yshani Perinpanayagam'
+*              performed at The Royal Concert Hall, Nottingham, 1st February
+*              2024.
+*
+*              This arrangement excludes the lead, which is played on EWI.
+*
+*              Zelda pieces included:
+*              1. Kass' Theme (Breath of the Wild)
+*              2. Song of Storms (Ocarina of Time)
+*              3. Dark World (Link to the Past)
+*              4. Fairy Fountain (Legend of Zelda)
+*              5. Overworld (Link's Awakening)
+*              6. Title Screen (Legend of Zelda)
+*******************************************************************************/
+
+C1 K-7  r4 [2 r2. ]
+C2 K-7  r4 [2 r2. ]
+C3 K-7  r4 [2 r2. ]
+C4 t140 r4 [2 c+4 e4 e4 ]
+
+; generic silence
+P1 [255 r1 ]
+
+; pattern for channel #1 in cass' theme #3
+P2 r8 v10 [4 o4a64o5c+ F2 ] r8 v2c+64v4c+v6c+v10c+ r16 [4 o4a64o5c+ F2 ]
+
+; pattern for channel #2 in cass' theme #3
+P3 r8 v10 [4 o4c+64e F2 ] r8 v2a64v4av6av10a r16 [4 c+64e F2 ]
+
+; kass' theme introduction
+C1
+v10 [6 o6c64o5afdco4afd F2F2 ]
+v10 [2 o6co5g+fdco4g+fd ] [2 F2F2 o5bg+fdo4bg+fd ] [2 F2F2 o5a+g+fdo4a+g+fd ]
+v10 [6 o6co5ageco4age F2F2 ]
+v1  [6 o6c+o5agec+o4age F1F1 ]
+v10 [6 o6eco5afdo4afc F2F2 ]
+v10 [6 o6co5agfdo4ago3b F2F2 ]
+v10 [6 o6gdo5bgeo4bgc F2F2 ]
+v1  [6 o5dbo4bo5geo4bgc F1F1 ]
+v10 [6 o6fdco5gfco4gd F2F2 ]
+v2  [4 o6gdo5a+gfco4gd F1F1 ] v10 [2 o6fdo5a+gfco4gd F2F2 ]
+v10 [6 o5gedo4bgedo3b F2F2 ]
+v1  [6 o5gedco4gedc F1F1 ]
+v10 [6 o6eco5aeco4afd F2F2 ]
+v1  [6 o6g+eco5g+dco4g+e F1F1 ]
+v12 [4 o6eo7eo6co7co5ao6ao5go6go5eo6eo5co6co4ao5ao4eo5e F2F2F2F2 ]
+r2 r2r4
+
+C2 [12 r1 ] r2r4 ; nothing happening
+
+C3
+o2v2b8v4bv9b4v4b8v2b
+ev4ev9e4v4e8v2e
+av4av9a4v4a8v2a
+av4av9a4v4a8g+64gf+fed+dc+
+d4v9dv4d8v2d
+gv4gv9g4v4g8v2g
+cv4cv9c4v4c8v2c
+o3cv4cv9c4v4c8v2c
+o2a+v4a+v9a+4v4a+8v2a+
+a+v4a+v9a+4v4a+8v2a+
+av4av9a4v4a8v2a
+av4av9a4v4a8v2a
+fv4fv9f4v4f8v2f
+ev4ev9e16&e64f64ao3d+e8v4ev2e
+o2v9ar16a8r16v4a8r16v2a8r16v1a8
+r2r8 r2r4
+
+C4 c+4 r2. [10 r1 ] r4 t57 c+4eec+8c edc16d+c8
+
+; kass' theme proper #1
+C1
+r4    v10 [4 o4a64o5c F2F2 ]   r8 v10 [4 o4a64o5c F2F2 ]
+r4&r8 v10 [4 o4g+64b F2F2 ]    r8 v10 [4 o4g+64b F2F2 ]
+r4&r8 v10 [4 o4a64o5c F2F2 ]   r8 v10 [4 o4a64b F2F2 ]
+r4&r8 v10 [4 o4a+64o5c+ F2F2 ] r8 v10 [4 o4a64o5c+ F2F2 ] r8
+
+v10 [8 o5d64o4a F2F2 ]
+v1  [8 o5do4a F1 ]
+v10 [8 o5do4a ]
+    [8 o5do4a F2F2 ]
+v1  [8 o5do4a F1 ]
+v10 [8 o5d+o4a ]
+    [8 o5eo4b F2F2 ]
+v1  [8 o5eo4b F1 ] r4&r8 
+
+v10 [4 o5e64o4b F2F2 ] r4 v10 [4 o5e64o4b F2F2 ] v10 [4 o5e64o4b F2F2 ] r4 
+v10 [4 o5f64c F2F2 ]   r4 v10 [4 f64c F2F2 ]     r8
+v10 [4 f64c F2F2 ]     r4 v10 [4 o5e64o4b F2 ]   v10 [4 o5fc F2F2 ] r4
+v10 [4 o5e64o4a F2F2 ] r4 v10 [4 o5e64o4a F2F2 ] r8
+v10 [4 o5e64o4a F2F2 ] r4 v10 [4 o5e64o4a F2 ] v10 [4 o5c+o4f+ F2 ]
+
+v10 [8 o4fo5c F2 ] [8 o4fo5c F1 ] v10 [8 o4fo5d ]
+v10 [8 o4eb F2 ]   [8 eb F1 ]     v10 [8 eg+ ]
+v2  [4 eaea F1 ] v10 [8 ea ] r1
+
+C2
+r4    v10 [4 o4f64d F2F2 ] r8 v10 [4 f64d F2F2 ]
+r4&r8 v10 [4 f64d F2F2 ]   r8 v10 [4 e64d F2F2 ]
+r4&r8 v10 [4 e64g F2F2 ]   r8 v10 [4 e64g F2F2 ]
+r4&r8 v10 [4 e64g F2F2 ]   r8 v10 [4 e64g F2F2 ] r8
+
+v10 [8 f64c F2F2 ]
+v1  [8 fc F1 ]
+v10 [8 gc ]
+    [8 o4go3b F2 ]
+v1  [8 o4go3b F1 ]
+v10 [8 o4go3b ]
+    [8 o4gc F2F2 ]
+v1  [8 o4gc F1 ] r4&r8
+
+v10 [4 o4g64c F2F2 ] r4 v10 [4 g64c F2F2 ] v10 [4 gc F2F2 ] r4 
+v10 [4 g64d F2F2 ]   r4 v10 [4 g64d F2F2 ] r8
+v10 [4 g64d F2F2 ]   r4 v10 [4 f+64c+ F2 ] v10 [4 gd F2F2 ] r4
+v10 [4 g64c F2F2 ]   r4 v10 [4 g64c F2F2 ] r8
+v10 [4 g64c F2F2 ]   r4 v10 [4 g64c F2 ] v10 [4 o4d+o3a+ F2 ]
+
+v10 [8 o3ao4d+ F2 ] [8 o3ao4d+ F1 ] v10 [8 o3ao4d+ ]
+v10 [8 o3g+o4d F2 ] [8 o3g+o4d F1 ] v10 [8 o3bo4c ]
+v2  [4 o3ao4co3ao4c F1 ] v10 [8 o3ao4c ] r1
+
+C3
+v10 o2b16
+re64r16&r32&r64o3a32b16r8&r32a64b16&b64r32o2b16re8
+o3e32r16&r32a32b32&b64r32&r64o2e16ra64b16&b32&b64a+8a
+o3a64r16&r32&r64o4c16ro2e32r16&r32o3b16ro2g+8a
+ro3g16ro2a32r16&r32e8d+d16&d64
+r32&r64f16&f64r32&r64a16ro3c32r16&r32d64r16&r32&r64f16ro1g8
+bo2d16rf32r16&r32g8bo3c
+o2c32r16&r32b8o3c16rero2g32r16&r32o3d+16
+ecro2a32r16&r32e32r16&r32c32d16&d32c16ro1a+8
+ro2a+ro3f16ro1a8a+
+o2f32r8&r16&r32a+16r8&r16o1a+8a
+o2a16r8&r16e32r16&r32o3d32e16&e32o1a8o2g
+o3f+g16ro2g32r16&r32d+8ef
+d+32&d+64r16&r64a8o3cd+16ro2a8g+
+o1b16ro2b8o3d32e16&e32o2a8o1g+32&g+64r8&r16&r64o2a8o3d+32e16r32g16rdd+32do2gr16&r32a8
+o3c64r32&r64o2c64r32&r64e64r32&r64g64r32&r64g32a16&a32g+32g16&g32d32e16&e32
+
+C4 [3 p4 p5 ] p4 d8eed+c16ed+8d+r2d8
+
+; kass' theme proper #3
+C1
+v10 [4 e64a F2 ] r8  v10 a64 r32&r64     v10 a64 r8&r32&r64 v10 a64 r16&r32&r64    v10 a64 r16&r32&r64
+v10 [4 e64a F2 ] r16 v10 a64 r16&r32&r64 v10 a64 r32&r64    v10 [4 e64a F2 ] r4
+v10 [4 f64a F2 ] r8  v10 a64 r32&r64     v10 a64 r8&r32&r64 v10 a64 r16&r32&r64    v10 a64 r16&r32&r64
+v10 [4 f64a F2 ] r16 v10 a64 r16&r32&r64 v10 a64 r32&r64    v10 [4 f64a F2 ] r4&r8
+v10 [4 f64g F2 ]     v10 a64 r32&r64     v10 a64 r8&r32&r64 v10 a64 r16&r32&r64    v10 a64 r16&r32&r64
+v10 [4 f64g F2 ] r16 v10 g64 r16&r32&r64 v10 g64 r32&r64    v10 [4 f64g F2 ] r4 
+
+v2 [8 g64b F1 ] v1 [12 g64a F1 ] v4 [4 f+64g+ F1F1 ]
+v1 [12 g64a F1 ] o5 v2dv4dv6dv10d o4 v2bv4bv6bv10b v2gv4gv6gv10g v2ev4ev6ev10e v2dv4dv6dv10d o3 v2bv4bv6bv10b
+r4
+
+v10 [4 o5f64o4a F2 ] r4 v10 [4 o5f64o4a F2 ]
+r8 [2 v10 [4 o5e64c F2 ] r4 ]
+[2 r8 v10 [4 g+64d F2 ] ]
+[2 r4 v10 [4 o5e64o4a F2 ] ]
+[4 r4 v10 [4 o5f64c F2 ] ] r8
+
+v2 [8 o4a+64o5e F1 ] v10 [4 o4a+o5e ] [4 o4bo5e ] v2 [8 o5fc F1 ]
+v1 [12 o4bo5e F1 ]
+
+v2g+v4g+v6g+v10g+ v2ev4ev6ev10e o4 v2bv4bv6bv10b v2g+v4g+v6g+v10g+ v2ev4ev6ev10e v2dv4dv6dv10d
+
+C2
+v10 [4 o3a64o4c+ F2 ] r2&r8
+v10 [4 o3a64o4c+ F2 ] r4
+v10 [4 o3a64o4c+ F2 ] r4
+v10 [4 o3a64o4c  F2 ] r2&r8
+v10 [4 o3a64o4c  F2 ] r4
+v10 [4 o3a64o4c  F2 ] r4&r8
+v10 [4 o3b64o4d  F2 ] r2
+v10 [4 o3b64o4d  F2 ] r4
+v10 [4 o3b64o4d  F2 ] r4
+
+v2 [8 c64e F1 ] v1 [12 ce F1 ] v4 [4 o3bo4d+ F1F1 ]
+v1 [12 o4ce F1 ] r2&r8 v8
+
+v10 [4 o4g64c F2 ] r4 v10 [4 g64c F2 ]
+r8 [2 v10 [4 g64d F2 ] r4 ]
+[2 r8 v10 [4 f64b F2 ] ]
+[2 r4 v10 [4 g64c F2 ] ]
+[4 r4 v10 [4 a64d F2 ] ] r8
+
+v2 [8 d64g+ F1 ] v10 [4 dg+ ] [4 d+a ] v2 [8 dg+ F1 ]
+v1 [12 dg+ F1 ] r4&r8
+
+C3
+v10 o2a16&a32r4&r32a16&a32r4&r8&r32a16o3c64r4&r32&r64o2a16&a32r32d+16&d+32r32d16&d32
+r4&r32d16&d32r4&r8&r32o3d16r4&r16c32d16&d32e32f16&f32o2b16&b32
+r4&r32a64b32&b64r8o3g64r32&r64o2a16&a32r8&r32g16&g32r4&r32g16&g32r32a+b16&b32a+32
+o3c8o2b64agfedc4&c8o1a64b16&b32&b64o2c4&c8
+e32rgro3crdrd+rerf8
+ro2fro3f16ro1a8o2c
+e32r8&r16&r32o3c16r8&r16o1g8g+
+o2g+16r8&r16f32g16&g32o3c32d16&d32o1g+8a
+o3g32a16r8&r32o2g32r16&r32o3g32a16r8&r32o2f8
+o3e32f16r8&r32c32r16&r32e32f16r32o2f64r16&r32&r64f8
+o3e32f16r8&r32c32r16&r32e32f16r32o2f64r16&r32&r64o3d32
+e4d+64c+o2bag+f+e8d+64f8&f16&f32&f64e4&e8
+g+32rbro3erf+rgrg+r
+
+C4 p4 p6 p4 p7 p4 p6 p4 p8
+
+; kass' theme proper #3
+C1
+[2 p2 p2 r8 v2c+64v4c+v6c+v10c+ r16 ]
+
+r8 v10 [4 o4g64o5c  F2 ] v10 o6ao5ar32o6g64o5gr32o6f64o5fr32o6c64o5cr32   v10 [4 o4a64o5c  F2 ]
+r8 v10 [4 o4a64o5d  F2 ] v10 o6bo5br32o6g64o5gr32o6f64o5fr32o6d64o5dr32   v10 [4 o4a64o5d  F2 ] r4
+r8 v10 [4 o4a+64o5d F2 ] v10 o6a+o5a+r32o6g64o5gr32o6e64o5er32o6d64o5dr32 v10 [4 o4a+64o5d F2 ]
+r8 v10 [4 o4a64o5c+ F2 ] o4 v10av8av6av4a o5 v10c+v8c+v6c+v4c+ v10ev8ev6ev4e v10gv8gv6gv4g
+v10 [4 o4ao5c+ F2 ] o5 v10av8av6av4a o6 v10c+v8c+v6c+v4c+ v10ev8ev6ev4e v10gv8gv6gv4g
+
+v1 [8 o4bo5f F1 ] v10 [8 o4bo5f ] v4 [8 cf F1 ]
+[3 v10 [4 o4bo5e F2 ] r8 ]
+v1 [8 o4a64o5e F1 ] v10 [8 o4a64o5e ] v4 [8 o4a+o5e F1 ]
+[3 v10 [4 o4ao5e F2 ] r8 ]
+
+v10 [16 d+64gc F2 ]
+v10 [11 eg+d F2 ] v10 [5 eg+b F2 ]
+
+C2
+[2 p3 p3 r8 v2a64v4av6av10a r16 ]
+r8 v10 [4 c64f F2 ]     r4 v10 [4 c64f F2 ]
+r8 v10 [4 o3b64o4f F2 ] r4 v10 [4 o3b64o4f F2 ] r4
+r8 v10 [4 g64e F2 ]     r4 v10 [4 g64e F2 ]
+r8 v10 [4c+64e F2 ]     r4 v10 [4 c+64e F2 ] r4
+
+v1 [8 d64a F1 ] v10 [8 da ] v4 [8 d+a F1 ]
+[3 v10 [4 dg+ F2 ] r8 ]
+v1 [8 c64g F1 ] v10 [8 cg ] v4 [8 c+g F1 ]
+[3 v10 [4 c64g F2 ] r8 ]
+
+v10 [8 o4f64gad+co3a F2 ]
+v10 [5 o4ef+g+do3bg+ F2 ] v10 [3 o4ef+g+do3bg+ F2 ]
+
+C3 v10
+o3 a16g+64aa+ao2a32r16&r32a16ra64r16&r32&r64a16ra32&a64r16&r64a16
+ra64r16&r32&r64a32r16&r32a32&a64r16&r64a16ro3c64c+16&c+32&c+64o2g16
+rg32r16&r32g16rg64r16&r32&r64g16rg32&g64r16&r64g16
+rg64r16&r32&r64g32r16&r32g32&g64r16&r64g16rf64f+16&f+32r64f16
+ro3e32f16&f64r64o2f16ro3f32r16&r32o2f8f+g16
+ro3f32g16g+64go2g32r16&r32g32&g64r16&r64g16ro3c+64d16&d32&d64o2e16
+re32r16&r32e16rf+16&f+32&f+64r64g8g+32&g+64r16&r64a16
+ra64r16&r32&r64a64r16&r32&r64a32&a64r16&r64a8a+a32
+b4a+64g+f+ed+c+o1b8o2d+64f8&f16&f32&f64e8&e16
+f64gabo3c32d8&d16c+64co2a32b8o3c32o2brg
+a4g+64f+edc+o1ba8o2c+64d+8&d+16&d+32&d+64g8&g16
+g+64aa+bo3c8&c16&c32o2b64a+a32g8f+64fed+dd+e
+f8&f16&f32&f64f8fffe4
+o3e64r16&r32&r64o2e32&e64r16&r64a+32&a+64b16r64o3e32r16&r32
+
+C4 [4 p9 ] p8 p7 c+4 eee8dc16d+e8d+d+16d+
+
+; song of storms #1
+C1 t57 [3 p10 ] p13 p10 p17
+C2 [3 p11 ] p14 p11p18
+C3 [3 p12 ] p15 p12 p19
+C4 [6 p4 ] p16 p4 p6 p20
+
+; dark world interlude
+C1 p21
+v10 [4 o4b64o5d+ F2 ] r4&r8 v10 [4 o4b64o5d+ F2 ] r8
+p21
+v10 [4 c+64e F2 ] r4&r8 v10 [4 c+64e F2 ] [4 c+64e F1 ]
+p21
+v10 [4 o4b64o5d+ F2 ] r4 v10 [4 o4b64o5d+ F2 ] r8 v3 d32 v5 d v7 d v10 d
+r8 v10 [4 c+64e F2 ] r4 v10 [4 c+64e F2 ] r4 v10 [4 c64d+ F2 ] r8 v10 [4 d+64f+ F2 ] r8 v10 [4 c64d+ F2 ]
+
+C2 v10 [4 o4e64a F2 ] r8 b64 r16&r32&r64 v10 [4 e64a F2 ] r8 b64 r16&r32&r64
+v10 [4 f+64a F2 ] r4&r8 v10 [4 f+64a F2 ] r8
+v10 [4 f+64a F2 ] r8 a64 r16&r32&r64 v10 [4 f+64a F2 ] r8 a64 r16&r32&r64
+v10 [4 g+64b F2 ] r4&r8 v10 [4 g+64b F2 ] [4 g+64b F1 ]
+v10 [4 a64b F2 ] r8 b64 r16&r32&r64 v10 [4 a64b F2 ] r8 b64 r16&r32&r64
+v10 [4 f+64a F2 ] r4 v10 [4 f+64a F2 ] r8 v3 b32 v5 b v7 b v10 b
+r8 v10 [4 e64a+ F2 ] r4 v10 [4 e64a+ F2 ] 
+r4 v10 [4 d+64g+ F2 ] r8 v10 [4 f+64b F2 ] r8 v10 [4 d+64g+ F2 ]
+
+C3 v10 o1a8ro2e64r16&r32&r64o1a8ro2b64r16&r32&r64o1b8
+ro2a+b16rf+rd+8d
+rf+64r16&r32&r64d8r4e8
+ro3d+e16ro1b8a+a
+ro2e64r16&r32&r64o1a8ro2b64r16&r32&r64o1b8
+ro2a+b16rf+rc8c+
+b32o3c+16r32o1b8o2c+16rb32o3c+16r32o2d8d+
+o3c64r16&r32&r64o2g+64r16&r32&r64d+16ro3c64r16&r32&r64o2c8
+
+C4 [2 d8eed+eedeeed+e ] d8eed+eedeed+ee p5
+
+; song of storms #2
+C1 K-3 p10 K-7 p13 p10 K-9 p17 K-7
+C2 K-3 p11 K-7 p14 p11 K-9 p18 K-7
+C3 K-3 p12 K-7 p15 p12 K-9 p19 K-7
+C4 p4 p4 p16 p4 p4 o4d8eed+c16ed+8 t80 d+r2&r8
+
+; fairy fountain intro
+C1 v10 o4 v6g64v10g [2 o4v6bv10bo5v6dv10dv6f+v10f+v6av10a ] o5v6bv10bv6dv10d [2 o5v6f+v10f+v6av10av6bv10bo6v6dv10d ]
+o6v6f+v10f+ o5v6av10a o5v6bv10bo6v6dv10dv6f+v10f+v6av10a v10 [4 o5b32o6df+ab r16&r32 F2F2 ] r8&r16&r32
+C2 v1 [4 o4f+64do3bg ] v1 [4 [2 o4f+64do3bg ] F1 ] [8 o4f+64do3bg ] [4 [2 o4f+64do3bg ] F2 ] v1 [4 o4f+64do3bg ]
+C3 v10 o2 g4 v8 g v6 g v5 g v4 g v3 g v2 g r4
+C4 r1r1
+
+C1 o4 p22
+C2 r32 o5 p22 ; IMPORTANT - remember you're a 32nd note out on channel #2 (for a sparkly effect)
+
+C3 
+o3 v1c8.v3c8.v5c8.v7c8.v9c8.v10c8.v7c8.v5c8.v3c8.v1c4&c16
+o2 v1b8.v3b8.v5b8.v7b8.v9b8.v10b8.v7b8.v5b8.v3b8.v1b4&b16
+   v1a8.v3a8.v5a8.v7a8.v9a8.v10a8.v7a8.v5a8.v3a8.v1a4&a16
+   v1e8.v3e8.v5e8.v7e8.v9e8.v10e8.v7e8.v5e8.v3e8.v1e4&e16
+o3 v1c8.v3c8.v5c8.v7c8.v9c8.v10c8.v7c8.v5c8.v3c8.v1c4&c16
+o2 v1b8.v3b8.v5b8.v7b8.v9b8.v10a+64g+64f+64f64v9e8.v7e8.v5e8.v3e8.v1e4
+   v1a8.v3a8.v5a8.v7a8.v9a8.a8.v7a8.v5a8.v3a8.v1a4&a16
+o3 v1d8.v3d8.v5d8.v7d8.v9d8.v10d16
+
+C4 [15 r1 ]
+
+; switch to 6/8 for swing emulation
+; i need to support triplets at some point...
+C1 r1r2
+C2 r1r2
+C3 t40 r1 o1b8o3d32r16&r32o2e32f16&f32c+8
+C4 v10 o4d4&r8e4&r8e4d8d+8c8d+8
+
+; fairy fountain proper
+C1 o4 p23 p24 C2 o5 p23 p24
+C3 v10 o2c4r2c4r2
+c4r4&r8c8r4c8f16g8r16cro1b4
+r2b4r2
+o2e4r4&r8o1b8o2e4o1a+2a4
+r2a4r2
+a4r2a4r2o2d16
+e4r4&r8&r16e4r2
+e4r2g32a16&a32o3c16ro2e8c16d8d+32do1b8o2c4
+r2c4r2
+c4r4&r8c8r4c8f16g8r16cro1b4
+r2b4r8
+o2d16d+4&d+16e4r4&r8o1b8o2e4g+16r8&r16d32e16&e32d8o1a4
+r2a4r2
+a4r4&r8a8r4a+32b8&b16&b32o2c8c+d4
+r2d4r2
+d4r2d8f+a32r16&r32o3c32r16&r32c32d16&d32c16&c64o2b64a+a
+C4 [8 p25 ]
+
+C1 p23
+o4 v9b16v2b16 v9av2a v9g+32gv2g16 v9e f32 e v9d16v2d v9c+v2c+
+[2 v2 [4 b64gec ] [8 b64gec    F1 ]]
+v2 [4 b64g+d+c ]  [8 b64g+d+c  F1 ]
+v2 [4 b64gec   ]  [8 b64gec    F1 ]
+[2 v2 [4 b64afd ] [8 b64afd    F1 ]]
+v9 r4. [3 a32f+do3b F2F2 ] v9 [3 o4g+32fdo3b F2F2 ]
+o5v2b32v6bv10b16v2f32v6fv10f16o4v2b32v6bv10b16
+[4 v2 [4 a64gec ] [8 a64gec    F1 ]]
+[2 v2 [4 a64f+dc] [8 a64f+dc   F1 ]]
+
+C2 p23
+o4 v9g32v2g16 v9ev2e v9dv2d v9o3b o4c32 o3b a16v2a v9gv2g
+r32 o5 ; 32nd offset
+[2 v2 [4 b64gec ] [8 b64gec    F1 ]]
+v2 [4 b64g+d+c ]  [8 b64g+d+c  F1 ]
+v2 [4 b64gec   ]  [8 b64gec    F1 ]
+[2 v2 [4 b64afd ] [8 b64afd    F1 ]]
+v9 r4. [6 a64f+do4b F2F2 ] v9 [6 o5g+64fdo4b F2F2 ]
+o5v6g+v10g+16v2d32v6dv10d16o4v2g+32v6g+v10g+16
+r32 o5 ; 32nd offset
+[4 v2 [4 a64gec ] [8 a64gec    F1 ]]
+[2 v2 [4 a64f+dc] [8 a64f+dc   F1 ]]
+
+C3 o2a16b8&b16a16rfg8&g16r8g32a8a+32ard8
+ed16rc+ro1bo2c8&c16r4&r8c8r4c8f16g8r16cr4&r16o1b4r8o2f+16ro1br8&r16b8
+o2g16r8&r16f8e4r8br
+o1b16rg16&g32r8&r32a16a+4&a+16b16a+r4
+ar8o2a16r4&r16o1a4
+r8o2a16r4&r16o1a4r8
+o2a16r4&r16o1a8o2a16rf32g16&g32f16rd
+e4r16br4&r16e4r8
+b16r4&r16e4r8b16r4&r16b16ra8ge16f32ed16rc+8r4
+cr2c4
+r8o1bo2c4r4&r8c8r4c8f16g8r16cro1b4
+r8o2ab16ro1a+8b4r8
+o2d16d+4&d+16e4b16&b32r4&r32o1g8o2e4g+16ro3c32d16&d32o2g+8o1a+a4
+r2a4r8
+a16a+4&a+16a4r8g+4a8r4a+32b8&b16&b32o2c8c+d4
+r2d4e8
+o3r4&r8
+
+C4 [7 p25 ] d4r8e4r8d+4d+8eee
+
+; zelda gb overworld intro
+C1 t25 o4v10f+16v6f+v2f+r2&r16
+v10g16v6gv2gr8&r16v10g+16v6g+v2g+r8&r16v10a16v6av2ar8&r16v10a16v6av2a
+r8&r16v10a+32o5c16&c32v6c16v4cr8o4v10b16v6bv4br8&r16v10a+8
+v6a+16v4a+r8v10a+16v6a+v4a+r8&r16o5v10c8v6c16v4cr8
+v10c+16v6c+v4c+r8&r16v10d8v6d16v4dr2v10c8v6c16v4cr2o4v10a8
+v6a16v4ar2o5v10c+8v6c+16v4c+ r2
+
+C2 o3v10a32&a64v6a16v2ar2&r16
+o4v10e16v6ev2er8&r16v10f16v6fv2fr8&r16v10f+16v6f+v2f+r8&r16v10f+16v6f+v2f+r8&r16v10g8v6g16v4gr8v10f+16v6f+v4f+
+r8&r16v10f8v6f16v4fr8v10f16v6fv4fr8&r16v10g8
+v6g16v4gr8v10g16v6gv4gr8&r16v10a8v6a16v4ar2
+v10a8v6a16v4ar2v10f+8v6f+16v4f+r2
+v10g8v6g16v4g r2
+
+C3 o2v10d16
+v6dv2dr2&r16v10c16v6cv2cr8&r16v10c+16v6c+v2c+r8&r16o3v10d16v6dv2dr8&r16v10d16v6dv10a
+rf+8ev6e16v4er8v10d+16v6d+v10g+32r16&r32a32b16&b32d8
+v6d16rv10a+rdv6dv10d+ro4cro3e8v6e16v4er8
+v10a16v6av4ar8&r16v10f+8v6f+16v4f+r8v10d16rd
+rdro4e8v6e16v4er8o3v10d16rdrdro4d8
+v6d16v4dr8o3v10d16rdrdro2a8v6a16v4ar8
+o3v10f+32g16&g32f+8e
+
+C4 [5 d8r16c16cce8cceccd+dc ]
+
+; zelda gb overworld proper
+C1 p26
+v10 [8 o4a64o5d F2 ] [8 o4ao5d F1 ] v10 [8 o4ao5d ] [8 o4a+o5d ]
+v10 [8 o4bo5d F2 ] [8 o4bo5d F1 ] v10 [8 o4bo5d ] [8 o4bo5d ]
+v10 [4 o5do4a F2 ] r4 v10 [8 o5c+64o4a F2 ] [4 o5c+64o4a F1F1 ] v10 [8 o5c+o4a+ ]
+p26
+
+C2 p27
+v10 [8 f64d F2 ] [8 fd F1 ] v10 [16 fd ]
+v10 [8 eg+ F2 ] [8 eg+ F1 ] v10 [16 eg+ ]
+v10 [4 eg F2 ] r4 v10 [8 e64g F2 ] [4 eg F1F1 ] v10 [8 fg ]
+p27
+
+C3 p29
+o2d16rd64r32&r64o3d32ro2d16rd64r32&r64o3d32ro2d16ro3d32r16&r32o2d16d+8&d+16e8
+o3d64e16&e32&e64o2e8o3d64e16&e32&e64o2e32&e64r16&r64o3d64e32&e64r16f+rgra8&a16&a32
+g64do2a8&a16&a32f+64c+o1a8&a16&a32r32o2aa+8&a+16&a+32
+p29
+
+C4 t60 [13 p28 ]
+
+C1
+v10 [4 o6d64f F2 ] r8 v10 [4 c+64e F2 ] r8 v10 [4 c64d+ F2 ] r8 v10 [4 o5b64o6d F2 ] r8 
+v10 [8 o4b64o5d     F2 ]
+v4  [4 [2 o5bo6d  ] F1 ]
+v4  [4 [2 o4go5c+ ] F1 ]
+v4  [4 [2 o5go6c+ ] F1 ]
+v10 [4 o6do5a       F2 ]
+r2.r8 r1&r1&r1&r1
+v12 [8 o5f64dr32 F2 ] v12 [8 o5f64dr32 F2 ] v12 [8 g64d+r32 F2 ] v12 [8 g+64er32 F2 ]
+v10 o5f64f+g16r32g64r32&r64g64r32&r64g16rg64r32&r64g64r32&r64g64r32&r64g64r32&r64g64r16&r32&r64g16rgr
+
+C2 v1 o5
+v10 [4 f64a F2 ] r8 v10 [4 g64a F2 ] r8 v10 [4 f64a F2 ] r8 v10 [4 f64a F2 ] r8
+v10 [8 o4f64g+    F2 ]
+v4  [4 [2 o5fg+ ] F1 ]
+v4  [4 [2 o4c+f ] F1 ]
+v4  [4 [2 o5c+f ] F1 ]
+v10 [4 df         F2 ]
+r2.r8 r1&r1&r1&r1
+v12 [8 o5c64o4a+r32 F2 ] v12 [8 a+64ar32 F2 ] v12 [8 o5d64o4a+r32 F2 ] v12 [8 o5d64o4a+r32 F2 ]
+v10 o4b64o5cc+16r32c+64r32&r64c+64r32&r64c+16rc+64r32&r64c+64r32&r64c+64r32&r64c+64r32&r64c+64r16&r32&r64c+16rc+r
+
+C3 v10 o2d16&d32
+f+64bo3d16ro2c+8o3c+64r16&r32&r64o2c8f32&f64r16&r64f+32&f+64g16&g64o3d16ro2b8&b16
+o3c64d+ga+b8&b64o4c64o3ba+bo4co3ba+o2a8&a16o3c64ef+g+a8a+64ag+aa+ag+ao4c+
+d32&d64r64o3g+32are64f32&f64r64c+d32&d64r64o2g+32are64f32&f64r64c+d16&d32&d64c+64co1ba+o2ff+gg+a8a+64ag+aa+ag+a
+
+; cool baroque bass solo section
+o3a+64o2a+32r64o4do3d32r64o4fo3f32r64o4a+o3a+32r64o5do4d32r64a+o3a+32r64o4fo3f32r64o4do3d32r64a+o2a+32r64o5fo4f32r64o5do4d32r64a+o3a+32r64o4ao3a32r64o4fo3f32r64o4do3d32r64a+o2a+32r64o3a
+o2a32r64o4co3c32r64o4eo3e32r64o4ao3a32r64o5co4c32r64ao3a32r64o4eo3e32r64o4co3c32r64ao2a32r64o5eo4e32r64o5co4c32r64ao3a32r64o4go3g32r64o4eo3e32r64o4co3c32r64ao2a32r64o3d
+o2d32r64o3fo2f32r64o3ao2a32r64o4c+o3c+32r64o4do3d32r64o4fo3f32r64o4ao3a32r64o5do4d32r64o5c+o4c+32r64ao3a32r64o4go3g32r64o4eo3e32r64o4c+o3c+32r64a+o2a+32r64o3go2g32r64o3eo2e32r64o5d
+o4d32r64o5fo4f32r64o5eo4e32r64o5do4d32r64o5c+o4c+32r64a+o3a+32r64o4ao3a32r64o4go3g32r64o4fo3f32r64o4eo3e32r64o4do3d32r64o4c+o3c+32r64a+o2a+32r64o3ao2a32r64o3g+o2g+32r64o3ao2a32r64a+8&a+16&a+32
+o3d64ao4d32&d64r64c32&c64r64o3a+32&a+64r64a32&a64r64c+ef8&f16f+64g+a32&a64r64g32&g64r64f32&f64r64e32&e64r64c+
+dd+8&d+16g+64bo4c32&c64r64d32&d64r64d+32&d+64r64f32&f64r64dd+e8&e16d+64c+o3a+bo4g+16&g+32o3g+64ao4e16&e32
+
+v10 o3g64g+a16r32a64r32&r64a64r32&r64a16ra64r32&r64a64r32&r64a64r32&r64a64r32&r64a64r16&r32&r64a16rag+64f+ed+
+
+C4 t60 d8c+dc+dc+dd+16d+d4d+dd+c+
+r2d4
+p30 p30
+d8c+16d8c+16d8c16d+16r16d+16c+16d16d+16d+16
+d8c+8d8c+8d+8e16e16d+16d+16d8
+p30 p30 r1
+
+; the dramatic conclusion
+C1 o4v10a4o6e32rdv4eo5v10ao6v4do5v10f+v4av10ev4f+v10dv4eo4
+v10a16&a64r32&r64a16&a64r32&r64a32rar
+a8r16aa8&a16
+o6a32rev4av10cv4eo4v10a16o5e32r o4a o5v4er16o4 v10a32rar
+a8r16ab8&b16 o5e32rf+v4ev10av4f+o4 v10b16 o5v4a32 ro4v10br16&r32b32rbr
+v10 [12 o6d64o5a+agdo4a+ag F2 ]
+r2
+v10c32d8&d32r16o3ar4&r16o4d32r16&r32d32re16f+32rg16a1&a1&a1
+e16f+2&f+8&f+16a4a+2&a+4
+g4a2&a8&a16&a32
+g+64gf+4g16
+g+2&g+4&g+16a16g+
+[32 g32b ]
+v10 [8 [4 o5do4af+e ] F2 ]
+
+C2 o4v10d32f+8&f+16&f+32r4&r8e32f+32&f+64r32&r64f+16&f+64r32&r64f+32rf+r
+g8r16gf+8&f+16r8&r16f+16rf+32r16&r32g32rgr
+g8r16gg8&g16r8&r16g16rg32r16&r32g32rgr
+[6 o6v10d64rv4crv10grv4dro5v10fro6v4grv10cro5v4fr ] r2r1r1
+o4v10c32d8&d32r16o3ar4&r16o4d32r16&r32d32re16f+32rg16o5c+2
+do3b2&b4&b8&b16
+o4c64dd+e
+f1ed+dd
+[4 v10o6d32o5v4e32v10f+32o6v4d32o5v10a32v4f+32v10e32v4a32 ]
+[4 v7o6d32o5v3e32v7f+32o6v3d32o5v7a32v3f+32v7e32v3a32 ]
+[4 v5o6d32o5v2e32v5f+32o6v2d32o5v5a32v2f+32v5e32v2a32 ]
+[4 v2o6d32o5v1e32v2f+32o6v1d32o5v2a32v1f+32v2e32v1a32 ]
+
+C3 o3v11c16
+rdrdrdrdrd16&d64r32&r64d16rd32rdrc16
+rcrcrcrcrcrc64d16&d64r32crcro2b16
+rbrbrbrbrbrbro3co2b
+v10a+8&a+16v8a+8&a+16v7a+8&a+16v6a+8&a+16v5a+8&a+16v3a+8&a+16v1a+8&a+16
+r1r1r1r2r8r16
+o3v10g32a8&a32r16er4&r16a32r16&r32a32rb16o4c+32rd16o2
+v11g1gf+fea
+d2v10dv8dv6dv5dv4dv3dv1d
+
+C4 [3 p28 ] [16 r1 ]
+
+; the end! time for some patterns and stuff
+
+; some 3/4 drum patterns
+P4  d8eeeeed+eedee         ; kit
+P5  d8eeeeeed+eed+d+       ; kit #2
+P6  d8eeeeed+eedd+d        ; kit #4
+P7  d8eedd+edd+eed+8d+8    ; kit #5
+P8  c+4e8dd+cd+eced+8d+8   ; kit #7
+P9  d8eedeed+eedee         ; kit #8
+P16 d8ec+eec+d+ec+dec+dec+eec+d+d+4d+d+8 ; kit #25
+P20 o4d8eed+c16ed+8d+r2&r8 ; kit #13
+
+; swung beat
+P25 d4r8e4r8d+4r8e4r8d8r4e4r8d+4r8e8r8d+8
+
+; 4/4 beat
+P28 d8c+d+dcc+d+d        ; kit #17
+P30 d8c+16d8c+16d8d+ec+d ; kit #21
+
+P26 ; LoZ gb overworld pulse #1
+v10 [4 o5d64o4a F2 ]  v2o6dv4o5av6f+v8o6dv10o5af+  r32 o6d64o5af+o6v3do5af+ r32 v10 [4 o5d64o4a F2 ]  r8 v2o6d64v4o5av6f+v8o6do5v10af+ r32 o6d64o5af+o6v3do5af+ r8&r32
+v10 [4 o5c64o4g F2 ]  v2o6dv4o5av6gv8o6dv10o5ag    r32 o6d64o5agv3o6do5ag   r32 v10 [4 c64o4g F2 ]    r8 v2o6d64v4o5av6go6v8do5v10ag   r32 o6d64o5agv3o6do5ag   r8&r32
+v10 [4 o4a+64o5d F2 ] v2o6dv4o5av6go6v8do5v10ag    r32 o6d64o5ago6v3do5ag   r32 v10 [4 o4a+64o5d F2 ] r8 v2o6d64o5v4av6go6v8do5v10ag   r32 o6d64o5ago6v3do5ag   r8&r32
+v10 [4 f64c F2 ]      v2o6dv4co5v6a+o6v8dv10co5a+  r32 o6d64co5a+o6v3dco5a+ r32 v10 [4 f64c F2 ] v10 o6f32rcv3fv10o5ao6v3co5v10gv3a v2 [8 o4b64o5e F1 ]
+v10 [8 o4a+o5d+ F2 ] [8 o4a+o5d+ F1 ] v10 [8 o4a+o5d+ ] [8 o4a+o5f ]
+
+P27 ; LoZ gb overworld pulse #2
+o4 
+v10 [4 d64f+ F2 ] r4
+v10 [4 f+64d F2 ] r2
+v10 [4 d64e F2 ] r4
+v10 [4 d64e F2 ] r2
+v10 [4 g64f F2 ] r4
+v10 [4 g64f F2 ] r2
+v10 [4 f64a F2 ] r4
+v10 [4 f64a F2 ] r4
+v2  [8 e64g+ F1 ]
+v10 [8 d+g F2 ] [8 d+g F1 ] v10 [16 d+g ]
+
+P29 ; LoZ gb overworld wave
+v10 o2d16rd64r32&r64o3d32ro2d16rd64r32&r64o3d32ro2d16rd64r32&r64a32rd16rc+8c16
+rc64r32&r64o3d32ro2c16rc64r32&r64o3d32ro2c16ro3d32r16&r32o2c16a+o3c32ro2c64r32&r64o1a+16
+o2d64r32&r64g+64a+16&a+64r32o1a+16&a+64r32&r64a+32r16&r32a+16&a+32r32a+64r32&r64a+64r32&r64a+64r32&r64o2a+64r32&r64f+32re16f32&f64
+r64a16o3fa+32&a+64r64e32&e64r64f32&f64r64o2a+32&a+64r64o3c32&c64r64o2a32&a64r64g16f32&f64r64e32&e64r64d+32&d+64r64f32&f64r64c+32&c+64r64d32&d64r64d+16
+rd+64r32&r64o3d+32ro2d+16rd+64r32&r64o3d+32ro2d+16rd+64r32&r64a+32rd+16ro1a+8
+
+P22 ; fairy fountain swell chords
+v1 [8 b64gedbged F1 ] v8 [4 bg+edbg+ed F2 ] [4 bgedbged F2 ]
+v1 [8 agf+dagf+d F1 ] v8 [8 agf+dagf+d F2 ]
+v1 [4 agecagec F1 ] [4 f+ecaf+eca F1 ] v8 [4 fecafeca F2 ] [4 f+ecaf+eca F2 ]
+v1 [8 af+ebaf+eb F1 ] v8 [4 af+d+baf+d+b F2 ] [4 gedbgedb F2 ]
+v1 [8 gecbgecb F1 ] v8 [4 g+d+cbg+d+cb F2 ] [4 gecbgecb F2 ]
+v1 [8 afdbafdb F1 ] v8 [4 a+f+dba+f+db F2 ] [4 g+fdbg+fdb F2 ]
+v1 [8 gecageca F1 ] v8 [8 gecageca F2 ]
+v1 [16 f+dca F1 ]
+
+P23 ; fairy fountain sidechain chords #1
+[2 v2 [4 b64ged ] [8 b64ged    F1 ]]
+v2 [4 b64g+ed ]   [8 b64g+ed   F1 ]
+v2 [4 b64ged  ]   [8 b64ged    F1 ]
+
+[3 v2 [4 a64gf+d ][8 a64gf+d   F1 ]]
+v2 [4 a64gf+d ]   [8 a+64f+fc+ F1 ]
+
+v2 [4 a64gec  ]   [8 a64gec    F1 ]
+v2 [4 a64f+ec ]   [8 a64f+ec   F1 ]
+v2 [4 a64fec  ]   [8 a64fec    F1 ]
+v2 [4 a64f+ec ]   [8 a64f+ec   F1 ]
+
+[2 v2 [4 b64af+e] [8 b64af+e   F1 ]]
+v2 [4 b64af+d+ ]  [8 b64af+d+  F1 ]
+
+P24 ; fairy fountain sidechain chords #2
+v2 [4 b64ged   ]  [8 b64ged    F1 ]
+
+[2 v2 [4 b64gec ] [8 b64gec    F1 ]]
+v2 [4 b64g+d+c ]  [8 b64g+d+c  F1 ]
+v2 [4 b64gec   ]  [8 b64gec    F1 ]
+
+[2 v2 [4 b64afd ] [8 b64afd    F1 ]]
+v2 [4 b64a+f+d ]  [8 b64a+f+d  F1 ]
+v2 [4 b64g+fd  ]  [8 b64g+fd   F1 ]
+
+[4 v2 [4 a64gec ] [8 a64gec    F1 ]]
+
+[3 v2 [4 a64f+dc] [8 a64f+dc   F1 ]]
+v2 [4 a+64f+d+c ] [8 a+64f+d+c F1 ]
+
+; song of storms (pulse #1 loop)
+P10 v10 o4
+a64 r16&r32&r64 e64   r16&r32&r64 v11 [4 o4a64o5e F2F2 ] r8 v11 [4 o4a64o5e F2F2 ] v10 o4e r16&r32&r64
+b64 r16&r32&r64 e64   r16&r32&r64 v3  [4 o4b64o5f+ F1 ]  v10 [12 o4b64o5f+ ]
+c64 r16&r32&r64 o4g64 r16&r32&r64 v11 [4 o5c64g F2F2 ]   r8 v11 [4 o5c64g F2F2 ]   v10 o4g r16&r32&r64
+b64 r16&r32&r64 e64   r16&r32&r64 v3  [4 o4b64o5f+ F1 ]  v10 [12 o4b64o5f+ ]
+
+; song of storms (pulse #2 loop)
+P11 v10 
+r4    v11 [4 o4c64g F2F2 ] r8 v11 [4 c64g F2F2 ]
+r4&r8 v2  [8 d64a F1 ] v10 [4 d64a ] v10 [4 ea ]
+r4    v11 [4 o4e64b F2F2 ] r8 v11 [4 e64b F2F2 ]
+r4&r8 v2  [8 e64a F1 ] v10 [8 da ]
+
+; song of storms (wave loop)
+P12 v10o1a8e64r8&r16&r32&r64o2e16r8&r16g32a16r32o1b8
+o2d32r16&r32f+8&f+16&f+32&f+64r8&r64a64r16&r32&r64c8
+o1g64r8&r16&r32&r64o2f32g16&g64r8&r64g64a16a+32a64o1b8
+o2d32r16&r32e32&e64f+8&f+16r64a16b16&b32a32&a64r32&r64
+
+; song of storms #2 (pulse #1 loop)
+P13 v2 [8 o5a64o6c F1 ] v10 [8 o5a64o6c F2 ] v10 d32 r v4 d r v10 a r v4 a r
+v2 [8 o5e64b F1 ] v10 [8 o5e64b F2 ] v10 o6 e32 r v4 e r v10 o5 b r v4 b r
+v2 [8 o5a64o6c F1 ] v10 [8 o5a64o6c F2 ] v10 c32 r v4 c r o5 v10 a+ r v4 a+ r
+v10 [4 g+64b F2 ] v10 [4 g+64b F2 ] r8 v10 [4 g+64b F2 ] r8 v10 [4 o5a64o6c F2 ]
+
+; song of storms #2 (pulse #2 loop)
+P14 v2 [8 o4f64o5e F1] v10 [8 o4f64o5e F2 ] o6 v10 g32 r v4 g r v10 d r v4 d r
+v2 [8 o4g64o5c F1 ]    v10 [8 o4g64o5c F2 ] v10 b32 r v4 b r v10 o5 g r v4 g r
+v2 [8 o4f64o5e F1    ] v10 [8 o4f64o5e F2 ] v10 a32 r v4 a r o5 v10 d r v4 d r
+v11 [4 o4e64o5d F2F2 ] v11 [4 o4e64o5d F2F2 ] r8 v11 [4 o4e64o5d F2F2 ] r8 v11 [4 o4f64o5d+ F2F2 ]
+
+; song of storms #2 (wave loop)
+P15 v10o2f8o1f64r8&r16&r32&r64o2f16ro3c32d16&d32c16ro2c8
+g64r8&r16&r32&r64c16ro3c32r16&r32d16d+32do2f8
+o1f64r8&r16&r32&r64o2f16ro3c32d16&d32o2d+8e16
+rer8&r16e16r8&r16a64a+16&a+32&a+64
+
+; song of storms #4 (pulse #1)
+P17 v2 [8 o5a64o6c F1 ] v10 [8 o5a64o6c F2 ] v10 g32 r v4 g r v10 d r v4 d r
+v12 [4 o5f64o6c F2F2 ] v3 [8 o5f64o6c ] v3 [8 o5eb F1 ] v11 [4 o5eb ]
+
+; song of storms #4 (pulse #2)
+P18 v2 [8 o4f64o5e F1 ] v10 [8 o4f64o5e F2 ] o6 v10 d32 r v4 d r v10 a r v4 a r
+v12 [4 o4g64o5d F2F2 ] v3 [8 o4g64o5d ] v3 [8 g+b F1 ] v11 [4 g+b ]
+
+; song of storms #4 (wave)
+P19 v10 o2f8o1f64r8&r16&r32&r64o2f16ro3c32d16&d32c16r v10 o2g8 v5 g v2 g v5 g+ v7 g+ v10 g+
+
+; pulse #1 dark world excerpt
+P21 v10 [4 o5c+64e F2 ] v10 r8 c+64 r16&r32&r64 [4 o5c+64e F2 ] v10 r8 c+64 r16&r32&r64
+
+;   ; check timing issues
+;   C1 r4 t255 v10 e1
+;   C2 r4 t255 v10 g1
+;   C3 r4 t255 v10 c1
+;   C4 r4 t255 c1
+
+; weird stuff can happen on loop, so just silence everything
+C1 [255 p1 ]
+C2 [255 p1 ]
+C3 [255 p1 ]
+C4 [255 p1 ]

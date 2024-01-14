@@ -1,5 +1,5 @@
 ################################################################################
-#  FILENAME:     mega-mmml.py
+#  FILENAME:     4ml-compiler.py
 #  DESCRIPTION:  Mega Micro Music Macro Language (4ML) Compiler
 #
 #  NOTES:        A quick 'n dirty python-based compiler for the 4ML language.
@@ -16,6 +16,11 @@
 #                  they refer. For example p10 should refer to P10, even if
 #                  there are ultimately fewer than 10 patterns and all the
 #                  indexes change.
+#                - Handle error for durations like 'r1.' (which is invalid).
+#                - Handle error for r+. Or should you be allowed to sharpen a
+#                  rest? Probably. It's doing no harm.
+#                - Handle error when you write something like 'g364' (so like
+#                  when the not value isn't in the lookup table).
 #
 #  AUTHOR:       Blake 'PROTODOME' Troise
 #  PLATFORM:     Command Line Application
@@ -29,6 +34,13 @@
 import sys
 import re
 import struct
+
+#################
+# global values #
+#################
+
+# reduces all volume commands by 1 step out of 16
+volume_reduction = 1
 
 ###################
 # terminal colors #
@@ -260,7 +272,7 @@ def process_mmml_string(input_string):
 		'r': 0x00, 'c': 0x01, 'c+':0x02, 'd': 0x03, 'd+':0x04, 'e': 0x05, 'e+':0x06, 'f': 0x06,
 		'f+':0x07, 'g': 0x08, 'g+':0x09, 'a': 0x0A, 'a+':0x0B, 'b': 0x0C, 'b+':0x01, 'o': 0x0D,
 		'v': 0x0E, 'p': 0xF2, 't': 0xF3, '@': 0xF5, 'i': 0xF5, '[': 0xF0, ']': 0xF1, '&': 0xF6,
-		'^': 0xF6, 'K': 0xF4, 's': 0xF7
+		'^': 0xF6, 'K': 0xF4, 's': 0xF7, 'F': 0xFE
 	}
 
 	duration_lookup = {
@@ -342,12 +354,17 @@ def process_mmml_string(input_string):
 			if function_nibble > 16 or function_nibble < 1:
 				throw_error(4, current_char, function_nibble)
 
+			# reduce volume (useful if you want to do this globally)
+			if current_char == 'v':
+				if function_nibble > volume_reduction:
+					function_nibble = function_nibble - volume_reduction
+
 			# squash the command and value to a single byte and output
 			output_byte = (command_nibble << 4) | (function_nibble - 1)
 			output_bytecode.append(output_byte)
 
 		# process two-byte commands with values
-		elif current_char in ('p', 't', '@', 'i', '[', 'K', 's'):
+		elif current_char in ('p', 't', '@', 'i', '[', 'K', 's','F'):
 			function_value = ''
 			command_byte = 0
 			function_byte = 0
@@ -554,7 +571,7 @@ print(f"{bcolors.OKBLUE}\nWriting to output file...{bcolors.ENDC}")
 # write to output file
 with open('4ml-data.h', 'w') as file:
 	file.write       (f"#define TOTAL_VOICES {total_channels}\n\n")
-	file.write       ("const unsigned char mmml_data[] = {\n\t// header\n\t")
+	file.write       ("const unsigned char _4ml_data[] = {\n\t// header\n\t")
 	write_mmml_header(mmml_data_header,file)
 	file.write       ("\n\t// data\n\t")
 	write_mmml_body  (mmml_data_bytes,file)
