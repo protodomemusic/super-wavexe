@@ -7,8 +7,8 @@
 
 void delay_process(float *input_buffer, uint32_t input_length, uint32_t delay_time, float delay_feedback, float delay_spread, uint8_t delay_direction, float delay_volume)
 {
-	float *delay_buffer     = (float*)malloc(delay_time * 2 * sizeof(float)); // x2 because stereo
-	float *input_buffer_wet = (float*)malloc(input_length   * sizeof(float));
+	float *delay_buffer     = (float*)calloc(delay_time * 2, sizeof(float)); // x2 because stereo
+	float *input_buffer_wet = (float*)calloc(input_length, sizeof(float));
 
 	uint32_t delay_playhead = 1;
 

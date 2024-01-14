@@ -95,6 +95,8 @@ void wave_export(int16_t *input_buffer, uint32_t input_length)
 	#ifdef DEBUG
 		printf("Successfully written! (Maybe, there's no error checking.)\n");
 	#endif
+
+	fclose(output_wave_file);
 }
 
 #define DITHER_GAIN  5  // volume of dither noise
