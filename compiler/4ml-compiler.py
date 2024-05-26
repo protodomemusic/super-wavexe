@@ -4,12 +4,15 @@
 #
 #  NOTES:        A quick 'n dirty python-based compiler for the 4ML language.
 #                It works, but I don't trust the regex. In fact, I don't really
-#                trust any of this. See readme.txt for a full explanation.
+#                trust any of this. See 4ml.md in the 'docs' directory for a
+#                full explanation.
 # 
 #                An upgrade of:
 #                https://github.com/protodomemusic/mmml
 #
 #                BUGS:
+#                - If you don't have any patterns, it won't compile. Dumb.
+#                - Find a neat way of unifying tempos across platforms.
 #                - Putting multiple > or < commands together will write multiple
 #                  octaves. Should really just do one.
 #                - 'p' commands should be paired with the pattern 'P' to which
@@ -20,7 +23,7 @@
 #                - Handle error for r+. Or should you be allowed to sharpen a
 #                  rest? Probably. It's doing no harm.
 #                - Handle error when you write something like 'g364' (so like
-#                  when the not value isn't in the lookup table).
+#                  when the value isn't in the lookup table).
 #
 #  AUTHOR:       Blake 'PROTODOME' Troise
 #  PLATFORM:     Command Line Application
@@ -40,7 +43,11 @@ import struct
 #################
 
 # reduces all volume commands by 1 step out of 16
-volume_reduction = 1
+volume_reduction = 2
+
+# the output needs to be tweaked a bit depending on the platform
+# possible targets: 'AVR' for AVR microcontroller code, or blank for anything else
+target_platform = 'GB'
 
 ###################
 # terminal colors #
@@ -354,8 +361,13 @@ def process_mmml_string(input_string):
 			if function_nibble > 16 or function_nibble < 1:
 				throw_error(4, current_char, function_nibble)
 
-			# reduce volume (useful if you want to do this globally)
+			# volume-specific conditions
 			if current_char == 'v':
+				# 4ML has a 1-16 range, but there are only 8 possible states for the AVR player
+				if target_platform == 'AVR':
+					function_nibble = int(function_nibble / 2)
+
+				# reduce volume (useful if you want to do this globally)
 				if function_nibble > volume_reduction:
 					function_nibble = function_nibble - volume_reduction
 
@@ -571,7 +583,13 @@ print(f"{bcolors.OKBLUE}\nWriting to output file...{bcolors.ENDC}")
 # write to output file
 with open('4ml-data.h', 'w') as file:
 	file.write       (f"#define TOTAL_VOICES {total_channels}\n\n")
-	file.write       ("const unsigned char _4ml_data[] = {\n\t// header\n\t")
+
+	# if it's AVR, we'll need to store it in program memory
+	if target_platform == 'AVR':
+		file.write   ("const unsigned char _4ml_data[] PROGMEM = {\n\t// header\n\t")
+	else:
+		file.write   ("const unsigned char _4ml_data[] = {\n\t// header\n\t")
+
 	write_mmml_header(mmml_data_header,file)
 	file.write       ("\n\t// data\n\t")
 	write_mmml_body  (mmml_data_bytes,file)

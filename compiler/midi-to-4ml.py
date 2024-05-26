@@ -59,7 +59,7 @@ import sys
 debug = 0
 
 # set this to 1 to enable velocity conversion
-velocity_print = 0
+velocity_print = 1
 
 # set this to 1 to hide durations on repeat
 duration_repeat = 0

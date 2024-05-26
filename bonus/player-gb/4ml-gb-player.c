@@ -35,12 +35,12 @@
 *                10th January 2024 (Update)
 *****************************************************************************H*/
 
-#include <stdio.h>
-#include <gb/gb.h>
+#include <stdio.h>    // everyone's favorite
+#include <gb/gb.h>    // core gb functionality
+#include "4ml-data.h" // holds the _4ml_data[] arrays
 
-#include "4ml-data.h"
-
-#define MAXLOOPS  5  // the maximum number of nested loops
+// stuff you shouldn't really mess with
+#define MAXLOOPS  5   // the maximum number of nested loops
 
 // throw a compile-time error if the 4ML data isn't Game Boy compatible
 _Static_assert(TOTAL_VOICES == 4, "Your 4ML data needs exactly 4 voices to work on Game Boy.");
@@ -379,7 +379,7 @@ void main()
 						// volume
 						if(buffer1 == 14)
 						{
-							// // 4ml has v1 as 0, which would be silence
+							// 4ml has v1 as 0, which would be silence
 							buffer2++;
 
 							if (voice == 0)

@@ -27,14 +27,14 @@
 *                  practice.
 *                - Editing, and pointing to, a new instrument-config.h for every
 *                  song is also annoying and weird, like above.
-*                - Bass is weak. Need to sort that really.
-*                - Portamento would be dope.
-*                - Vibrato/sweeps would be dope 2.
+*                - Vibrato/sweeps would be dope. I know you can use portamento
+*                  as a sweep (see 'garlic-bread.4ml') but it's hacky.
 *
 *  AUTHOR:       Blake 'PROTODOME' Troise
 *  PLATFORM:     Command Line Application (MacOS / Linux)
-*  DATE:         Initial: 1st April 2022
-*                Update:  29th July 2023
+*  DATE:         Initial:   1st April 2022
+*                Update #1: 29th July 2023
+*                Update #2: 27th March 2024
 *******************************************************************************/
 
 // libraries
@@ -59,11 +59,10 @@
 
 // the custom data files to read from, currently looking at the
 // default song files
-#include "../songs/default/4ml-data.h"
-#include "../songs/default/instrument-config.h"
+#include "../songs/garlic-bread/4ml-data.h"
+#include "../songs/garlic-bread/instrument-config.h"
 
 // note: definitions here required by wave-export.c
-#define PLAY_TIME      15     // duration of recording in seconds
 #define SAMPLE_RATE    44100  // cd quality audio
 #define TOTAL_CHANNELS 2      // stereo file
 #define TOTAL_SAMPLES  (PLAY_TIME * TOTAL_CHANNELS) * SAMPLE_RATE
@@ -72,18 +71,22 @@
 #define DRUM_VOICE TOTAL_VOICES - 1
 
 // important definitions
-#define OSC_DIVISOR      100     // change this to alter master tuning
-#define FX_UPDATE_RATE   100     // how many frames before we update the FX parameters
-#define LPF_HIGH         0.3     // the maximum height of the filter
-#define ZERO_CROSS_EVENT 0.006   // what we consider to be a zero crossing
+#define OSC_DIVISOR      100    // change this to alter master tuning
+#define FX_UPDATE_RATE   100    // how many frames before we update the FX parameters
+#define LPF_HIGH         0.3    // the maximum height of the filter
+#define ZERO_CROSS_EVENT 0.006  // what we consider to be a zero crossing
+#define DITHER_GAIN      5      // volume of dither noise
+
+// audio effects
+#include "fx/simple-limiter.c"
+#include "fx/simple-filter.c"
+#include "fx/simple-delay.c"
+#include "fx/freeverb.c"
 
 // externals
 #include "handy-functions.h"
-#include "simple-filter.c"
 #include "wave-data.h"
 #include "4ml.c"
-#include "freeverb.c"
-#include "simple-delay.c"
 #include "wave-export.c"
 
 // oscillator variables
@@ -108,6 +111,9 @@ float    osc_lpf_speed;
 float    osc_lpf_q;
 float    osc_distortion;
 float    osc_instrument_boost;
+
+float    osc_portamento_rate;
+uint8_t  portamento_enabled;
 
 // drum variables
 uint32_t drum_accumulator = DRUM_DATA_SIZE;
@@ -141,6 +147,14 @@ void configure_instrument(uint8_t instrument_id)
 
 	// instrument volume
 	osc_instrument_boost = map(instrument_bank[instrument_id][11], 0, 255, 0.0, 2.0);
+
+	// add portamento rate and enable
+	osc_portamento_rate = map(instrument_bank[instrument_id][12], 0, 255, 1.0, 0.0001);
+
+	if (instrument_bank[instrument_id][12] == 0)
+		portamento_enabled = 0;
+	else
+		portamento_enabled = 1;
 }
 
 int main()
@@ -220,6 +234,8 @@ int main()
 		uint8_t  osc_instrument    = 0;
 		uint8_t  osc_note_on       = 0;
 		uint8_t  osc_panning       = 0;
+		float    osc_current_pitch = 0;
+		float    osc_target_pitch  = 0;
 
 		// wavetable sample mixes
 		float    osc_mix_1 = 0;
@@ -229,8 +245,8 @@ int main()
 		float    osc_mix_3 = 1.0;
 
 		// stereo offset variables
-		float tan_smoothing_l = 0.0;
-		float tan_smoothing_r = 0.0;
+		float   tan_smoothing_l   = 0.0;
+		float   tan_smoothing_r   = 0.0;
 		uint8_t stereo_fx_counter = 0;
 
 		// initial parameters
@@ -258,8 +274,8 @@ int main()
 				channel_output_r   = osc_wavetable_r[(uint32_t)current_osc_sample % WAVECYCLE_SIZE];
 
 				// apply low pass filter
-				channel_output_l = resonant_LPF(channel_output_l, osc_lpf_state, osc_lpf_q + osc_lpf_state, 0);
-				channel_output_r = resonant_LPF(channel_output_r, osc_lpf_state, osc_lpf_q + osc_lpf_state, 1);
+				channel_output_l = apply_lpf(channel_output_l, osc_lpf_state, osc_lpf_q + osc_lpf_state, 0);
+				channel_output_r = apply_lpf(channel_output_r, osc_lpf_state, osc_lpf_q + osc_lpf_state, 1);
 
 				// apply foldback distortion
 				if (osc_distortion < 1.0)
@@ -383,6 +399,12 @@ int main()
 					// check for instrument reset
 					if (osc_note_on == 1)
 					{
+						// reset portamento on note on
+						// weird decision maybe, but I think it sounds better
+						// and it's my engine so I get to choose
+						// compile and uncomment if you disagree coward
+						osc_current_pitch = osc_target_pitch;
+
 						// reset accumulator so we start at a zero crossing
 						osc_accumulator = 0;
 
@@ -413,6 +435,10 @@ int main()
 					// update the drum voice
 					if (osc_note_on == 1)
 					{
+						// fix for drums and portamento
+						osc_current_pitch   = osc_target_pitch;
+						osc_pitch           = osc_current_pitch;
+
 						osc_note_on         = 0;
 						current_drum_sample = (uint8_t)osc_pitch - 1;
 						drum_accumulator    = 0;
@@ -422,11 +448,28 @@ int main()
 				fx_timer = FX_UPDATE_RATE;
 			}
 
+			// calculate the portamento
+			if (portamento_enabled)
+			{
+				if (osc_current_pitch != osc_target_pitch)
+				{
+					if (fabs(osc_current_pitch - osc_target_pitch) < osc_portamento_rate)
+						osc_current_pitch = osc_target_pitch;
+					else if (osc_current_pitch < osc_target_pitch)
+						osc_current_pitch += osc_portamento_rate;
+					else if (osc_current_pitch > osc_target_pitch)
+						osc_current_pitch -= osc_portamento_rate;
+				}
+				osc_pitch = osc_current_pitch;
+			}
+			else
+				osc_pitch = osc_target_pitch;
+
 			/*~~~~~~~~~~~~~~~~~~~~~~~~~*/
 			/*  process sequence data  */
 			/*~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
-			_4ml_update(&osc_pitch,&osc_target_volume,&osc_instrument,&osc_note_on,&osc_panning,v);
+			_4ml_update(&osc_target_pitch,&osc_target_volume,&osc_instrument,&osc_note_on,&osc_panning,v);
 		}
 
 		/*~~~~~~~~~~~~~~~~~~~~*/
@@ -437,31 +480,59 @@ int main()
 			printf("(Effects)");
 		#endif
 
-		// process delay
-		if (channel_fx[v][0] > 0)
+		if (voice_boost[v] > 0)
 		{
-			delay_process(
-				voice_buffer,
-				TOTAL_SAMPLES,
-				(uint32_t)delay_bank[channel_fx[v][0]][0] * 100,
-				(float)   delay_bank[channel_fx[v][0]][1] / 100.0,
-				(float)   delay_bank[channel_fx[v][0]][2] / 100.0,
-				(uint8_t) delay_bank[channel_fx[v][0]][3],
-				(float)   delay_bank[channel_fx[v][0]][4] / 100.0);
-		}
+			// process eq
+			if (channel_fx[v][0] > 0)
+			{
+				apply_eq(
+					voice_buffer,
+					TOTAL_SAMPLES,
+					map((float)eq_bank[channel_fx[v][0]][0], 1, 255, 0.001, 2.0),
+					map((float)eq_bank[channel_fx[v][0]][1], 1, 255, 0.001, 2.0),
+					(float)eq_bank[channel_fx[v][0]][2] / 100.0,
+					(float)eq_bank[channel_fx[v][0]][3] / 100.0,
+					eq_bank[channel_fx[v][0]][4],
+					(float)eq_bank[channel_fx[v][0]][5] / 100.0);
+			}
 
-		// process reverb
-		if (channel_fx[v][1] > 0)
-		{
-			reverb_process(
-				voice_buffer,
-				TOTAL_SAMPLES,
-				(float)reverb_bank[channel_fx[v][1]][0] / 100.0,
-				(float)reverb_bank[channel_fx[v][1]][1] / 100.0,
-				(float)reverb_bank[channel_fx[v][1]][2] / 100.0,
-				(float)reverb_bank[channel_fx[v][1]][3] / 100.0,
-				(float)reverb_bank[channel_fx[v][1]][4] / 100.0);
-		}			
+			// process limiter
+			if (channel_fx[v][1])
+			{
+				apply_limiter(
+					voice_buffer,
+					TOTAL_SAMPLES,
+					(uint8_t)limiter_bank[channel_fx[v][1]][0],
+					(uint8_t)limiter_bank[channel_fx[v][1]][1],
+					(float)  limiter_bank[channel_fx[v][1]][2] / 100.0);
+			}
+
+			// process delay
+			if (channel_fx[v][2] > 0)
+			{
+				apply_delay(
+					voice_buffer,
+					TOTAL_SAMPLES,
+					(uint32_t)delay_bank[channel_fx[v][2]][0] * 100,
+					(float)   delay_bank[channel_fx[v][2]][1] / 100.0,
+					(float)   delay_bank[channel_fx[v][2]][2] / 100.0,
+					(uint8_t) delay_bank[channel_fx[v][2]][3],
+					(float)   delay_bank[channel_fx[v][2]][4] / 100.0);
+			}
+
+			// process reverb
+			if (channel_fx[v][3] > 0)
+			{
+				apply_reverb(
+					voice_buffer,
+					TOTAL_SAMPLES,
+					(float)reverb_bank[channel_fx[v][3]][0] / 100.0,
+					(float)reverb_bank[channel_fx[v][3]][1] / 100.0,
+					(float)reverb_bank[channel_fx[v][3]][2] / 100.0,
+					(float)reverb_bank[channel_fx[v][3]][3] / 100.0,
+					(float)reverb_bank[channel_fx[v][3]][4] / 100.0);
+			}
+		}
 
 		/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 		/*  export channel to master  */
@@ -491,36 +562,36 @@ int main()
 	/*~~~~~~~~~~~~~~~~~~~*/
 
 	#ifdef DEBUG
-		printf("Applying 2-band master EQ...\n");
+		// get fx start time
+		clock_t clock_begin = clock();
+		printf("Applying master FX...");
 	#endif
 
-	#define MASTER_HPF_CUTOFF 0.04
-	#define MASTER_HPF_Q      0.05
+	apply_normalizer(buffer_float, TOTAL_SAMPLES);
+	apply_limiter(buffer_float, TOTAL_SAMPLES, MASTER_LIMITER_ATTACK_MS, MASTER_LIMITER_RELEASE_MS, MASTER_LIMITER_THRESHOLD);
+	apply_normalizer(buffer_float, TOTAL_SAMPLES);
 
-	#define MASTER_LPF_CUTOFF 0.4
-	#define MASTER_LPF_Q      0.5
-
-	// master highpass filter
-	for (uint32_t i = 0; i < TOTAL_SAMPLES; i += 2)
-		for (uint8_t c = 0; c < TOTAL_CHANNELS; ++c)
-			buffer_float[i+c] = resonant_HPF(buffer_float[i+c], MASTER_HPF_CUTOFF, MASTER_HPF_Q, c);
-
-	// master lowpass filter
-	for (uint32_t i = 0; i < TOTAL_SAMPLES; i += 2)
-		for (uint8_t c = 0; c < TOTAL_CHANNELS; ++c)
-			buffer_float[i+c] = resonant_LPF(buffer_float[i+c], MASTER_LPF_CUTOFF, MASTER_LPF_Q, c);
+	#ifdef DEBUG
+		// let's just see how long it took
+		clock_t clock_end = clock();
+		double time_spent = (double)(clock_end - clock_begin) / CLOCKS_PER_SEC;
+		printf(" - %.2f secs\n", time_spent);
+	#endif
 
 	/*~~~~~~~~~~~~~~~~~~~~~~~*/
 	/*  process output file  */
 	/*~~~~~~~~~~~~~~~~~~~~~~~*/
 
 	#ifdef DEBUG
-		printf("Normalizing & converting to 16-bit...\n");
+		printf("Converting to 16-bit...\n");
 	#endif
 
 	// final output array
 	int16_t *buffer_int = (int16_t*)calloc(TOTAL_SAMPLES, sizeof(int16_t));
-	float_to_sixteen_bit(buffer_float, buffer_int, TOTAL_SAMPLES);
+
+	// convert float back to int16_t
+	for (uint32_t i = 0; i < TOTAL_SAMPLES; i++)
+		buffer_int[i] = (int16_t)(buffer_float[i] * 32767); // + (noise(0) * DITHER_GAIN);
 
 	// we'll miss you buffer float
 	free(buffer_float);
@@ -534,7 +605,7 @@ int main()
 	#ifdef DEBUG
 		// let's just see how long it took
 		clock_t end = clock();
-		double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+		time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
 		printf("Done! Took %.2f seconds to complete.\n\n", time_spent);
 	#endif
 

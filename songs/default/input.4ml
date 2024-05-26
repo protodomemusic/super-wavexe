@@ -16,11 +16,11 @@
 *              + or #       : Sharpen a note
 *              o1-6         : Channel octave (1 lowest, 6 highest)
 *              < or >       : Decrease, or increase, the current octave
-*              v1-8         : Channel volume/velocity
+*              v1-16        : Channel volume/velocity
 *              [2-256       : Start X number of loops
 *              ]            : End a loop
 *              p1-256       : Call a pattern
-*              t1-256       : Set the pattern's tempo
+*              t1-256       : Set the voice's tempo
 *              @1-256       : Select an instrument
 *              K -100 - 100 : Transpose material X semitones
 *              s -100 - 100 : Setting panning (0 is centered)
@@ -58,42 +58,25 @@
 *              / suggestions / corrections contact me at: hello@protodome.com
 *******************************************************************************/
 
-/* a little demo song to get you going. i know it sucks, listen to sine-time.4ml
-for a good example of what can be done */
+; example garbage, have a look at the other songs
+C1 t50 v8  o2 @3  c1^c^c^c^
+C2 t50 v8  o3 @14 s40  g1^g^g^g^
+C3 t50 v8  o4 @6  s-40 d1^d^d^d^
+C4 t50 v8  o4 @14 s40  e1^e^e^e^
+C5 t50 v8  o3 @6  s-40 b1^e^d^e^
+C6 t50 v8  o6 @15 [64 d64^<g^e^c^> ]
+C7 t50 v12 o3 @1 c1^c^c^c^
+C8 t50 [4 v6f8v2e [3 v6ev2e ] ]
 
-; chord pattern
-P1 [2 v7 c8 r16 c r4. v6 c16 r8. c16 r ]
+; weird stuff can happen on loop, so just stop everything
+C1 p1
+C2 p1
+C3 p1
+C4 p1
+C5 p1
+C6 p1
+C7 p1
+C8 p1
 
-; bar 1 - 2
-C1 [2 v8 @6 o2 K0 p1
-C2 [2 v7 @2 s-50 o3 K7 p1
-C3 [2 v7 @2 s50 o3 K11 p1
-C4 [2 v7 @2 o4 K2 p1
-C5 [2 @1 K0 p2
-
-; arpeggio #1
-P2 [8 v5 o5 s-100 e32 v3 s100 b v5 s100 g v3 s-100 e < v5 s-100 g > v3 s100 g 
-   < v5 s100 b v3 s-100 g ]
-
-; bar 3 - 4
-C1 o2 K-2 p1 ]
-C2 o3 K5 p1  ]
-C3 o3 K9 p1  ]
-C4 o4 K0 p1  ]
-C5 K-2 p2    ]
-
-; arpeggio #2
-C6 @7 [16 o5 v4 d16 < v3 g > v4 e v3 d v4 c v3 e < v4 g v3 c ]
-
-; drum beat
-C7 [8 v8 c16 v6 d+ v5 f v8 d+ c+ v7 e v8 d+ c d+ d128c+32r64. d+16 e c+ v6 d+ v8
-   c d+ ]
-
-; weird stuff can happen on loop, so just silence everything
-C1 [255 r1 ]
-C2 [255 r1 ]
-C3 [255 r1 ]
-C4 [255 r1 ]
-C5 [255 r1 ]
-C6 [255 r1 ]
-C7 [255 r1 ]
+; silence channels
+P1 [255 r1 ]

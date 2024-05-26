@@ -1,101 +1,102 @@
-#=================================#
-# Mega Micro Music Macro Language #
-#=================================#
+Mega Micro Music Macro Language
+===============================
 
-#================================================#
-# What is Mega Micro Music Macro Language (4ML)? #
-#================================================#
+What is Mega Micro Music Macro Language (4ML)?
+----------------------------------------------
 
 4ML is a lightweight musical sequencing language for use in music software projects where you may want a minimal musical payload. It's an expansion of a simple language (Micro Music Macro Language) I defined for use in microcontroller programs and other small executable music projects. The language ended up being a quick and efficient way of storing music data in a format that suited the kind of music I like to write: melodically driven, reasonably complex, with a high note event density. Based on Music Macro Language (MML), it is both relatively easy to read in a text editor and close enough to the compiled bytecode to make writing and programming efficient.
 
 With the 'mega' variation of the language I wanted to: 1. make it even easier to create MML documents 2. syntactically bring the language closer in line with the (various) pre-existing MML implementations, and 3. move the compiler to a language that's easier to work with (Python).
 
-#========================#
-# 4ML Command Dictionary #
-#========================#
+4ML Command Dictionary
+----------------------
 
 In defining this language, I have looked at many of the most popular existing MML syntaxes and attempted to use the most popular symbols for each command. MML engines can generally be quite extensive and packed full of platform specific commands. With 4ML I want to be more flexible, and keep things much simpler (it does come with the trade-off of removing features though).
 
 Note, where other MML engines have been listed in the 'Also defined in' column, this does indicate compatibility, just that the commands share the same (or very similar) behavior between implementations. Where commands differ, I have put the respective symbol in brackets (for fun and reference I guess).
 
-;
-Single Line Comment
-Applies from the semicolon to the end of the line.
---
-Also in: PPMCK, MGSC, XPMCK
+***
 
-/* */
-Multi-Line Comment
-Applies from the first instance of /* through to the corresponding */.
---
-Also in: PPMCK, XPMCK, MML@
+**Symbol:**      `;`\
+**Description:** Single Line Comment\
+**Notes:**       Applies from the semicolon to the end of the line.\
+**Also in:**     PPMCK, MGSC, XPMCK
 
-C<0-255>
-Channel Definitions
-This is a core change to the MML paradigm that is not reflected in most MML implementations. Typically, channels are defined by the letters A-Z and, although it is very unlikely that you will be writing for more than 26 voices, it feels arbitrary to limit the language in that way. Additionally, where a language like PPMCK may have distinct sonic identities attached to each channel letter, 4ML is to be applied generally.
---
-Also in: PPMCK (A-Z), MGSC (A-Z), XPMCK (A-Z), MML@ (,)
+**Symbol:**      `/* */`\
+**Description:** Multi-Line Comment\
+**Notes:**       Applies from the first instance of `/*` through to the corresponding `*/`.\
+**Also in:**     PPMCK, XPMCK, MML@
 
-P<0-255>
-Pattern Definitions
-Patterns are essentially subroutines.
---
-Also in: XPMCK (\)
+**Symbol:**      `C<0-255>`\
+**Description:** Channel Definitions\
+**Notes:**       This is a core change to the MML paradigm that is not reflected in most MML implementations. Typically, channels are defined by the letters A-Z and, although it is very unlikely that you will be writing for more than 26 voices, it feels arbitrary to limit the language in that way. Additionally, where a language like PPMCK may have distinct sonic identities attached to each channel letter, 4ML is to be applied generally.\
+**Also in:**     PPMCK (`A-Z`), MGSC (`A-Z`), XPMCK (`A-Z`), MML@ (`,`)
 
-p<0-255>
-Pattern Invocations
---
-Also in: XPMCK
+**Symbol:**      `P<0-255>`\
+**Descripton:**  Pattern Definitions\
+**Notes:**       Patterns are essentially subroutines.\
+**Also in:**     XPMCK (`\`)
 
-+ and #
-Sharpen Note
-At the moment there's no way to flatten a note. Also worth noting that, whilst you'd expect b+ to be higher than b, as it's equivalent to c and there's no octave change, it's the c an octave below.
---
-Also in: PPMCK, MGSC, XPMCK, MML@
+**Symbol:**      `p<0-255>`\
+**Description:** Pattern Invocations\
+**Notes:** \
+**Also in:**     XPMCK
 
-o<0-16>
-Octave
---
-Also in: PPMCK, MGSC, XPMCK, MML@
+**Symbol:**      `+` and `#`\
+**Description:** Sharpen Note\
+**Notes:**       At the moment there's no way to flatten a note. Also worth noting that, whilst you'd expect b+ to be higher than b, as it's equivalent to c and there's no octave change, it's the c an octave below.\
+**Also in:**     PPMCK, MGSC, XPMCK, MML@
 
-< and >
-Octave Lower and Octave Raise
---
-Also in: PPMCK, MGSC, XPMCK, MML@
+**Symbol:**      `o<0-16>`\
+**Description:** Octave\
+**Notes:** \
+**Also in:**     PPMCK, MGSC, XPMCK, MML@
 
-v<0-16>
-Volume
---
-Also in: PPMCK, MGSC, XPMCK, MML@
+**Symbol:**      `<` and `>`\
+**Description:** Octave Lower and Octave Raise\
+**Notes:** \
+**Also in:**     PPMCK, MGSC, XPMCK, MML@
 
-t<0-255>
-Tempo
---
-Also in: PPMCK, MGSC, XPMCK, MML@
+**Symbol:**      `v<0-16>`\
+**Description:** Volume\
+**Notes:** \
+**Also in:**     PPMCK, MGSC, XPMCK, MML@
 
-& or ^
-Tie / Slur
---
-Also in: PPMCK, MGSC, XPMCK, MML@
+**Symbol:**      `t<0-255>`\
+**Description:** Tempo\
+**Notes:** \
+**Also in:**     PPMCK, MGSC, XPMCK, MML@
 
-@<0-255>
-Instrument
---
-Also in: PPMCK, MGSC, XPMCK
+**Symbol:**      `&` or `^`\
+**Description:** Tie / Slur\
+**Notes:** \
+**Also in:**     PPMCK, MGSC, XPMCK, MML@
 
-K<0-255>
-Transpose
---
-Also in: PPMCK, MGSC, XPMCK
+**Symbol:**      `[<1-256> ]`\
+**Description:** Loop\
+**Notes:** \
+**Also in:**     MSGC (`w 1,2,4,5,6,7`), XPMCK (`@te`)
 
-F<0-255>
-Miscellaneous Expanded Functions
-For some platforms there are musical or system requirements that make more sense than others. This kind of stuff I don't really want to permanently embed into core 4ML syntax, so there's the generic 'F' command. At this moment in time (2024/01/10), it only reads the next byte, but it could theoretically read another byte beyond that for further adaptability. If you (likely me a few years from now) are thinking about supporting these functions for some new future player, it's kinda not required, so don't sweat it.
+**Symbol:**      `@<0-255>`\
+**Description:** Instrument\
+**Notes:** \
+**Also in:**     PPMCK, MGSC, XPMCK
 
-#===================#
-# command reference #
-#===================#
+**Symbol:**      `K<0-255>`\
+**Description:** Transpose\
+**Notes:** \
+**Also in:**     PPMCK, MGSC, XPMCK
 
+**Symbol:**      `F<0-255>`\
+**Description:** Miscellaneous Expanded Functions\
+**Notes:**       For some platforms there are musical or system requirements that make more sense than others. This kind of stuff I don't really want to permanently embed into core 4ML syntax, so there's the generic 'F' command. At this moment in time (2024/01/10), it only reads the next byte, but it could theoretically read another byte beyond that for further adaptability. If you (likely me a few years from now) are thinking about supporting these functions for some new future player, it's kinda not required, so don't sweat it.
+
+***
+
+Command Reference
+-----------------
+
+```
 --------------------------------------  -------------------------------------------
 | 4ML  | BYTECODE | HEX | COMMAND    |  | 4ML       | BYTECODE | HEX | COMMAND    |
 --------------------------------------  -------------------------------------------
@@ -152,3 +153,4 @@ For some platforms there are musical or system requirements that make more sense
 | 64   | 0110     | 6   |  |           | 1110     | E   |
 | 128  | 0111     | 7   |  |           | 1111     | F   |
 -------------------------  ------------------------------
+```

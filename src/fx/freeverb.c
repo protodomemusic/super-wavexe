@@ -10,6 +10,10 @@
 *                Edits here are alterations to rxi's C version to make it as
 *                portable as possible (some languages don't allow passing of
 *                structs into functions, nor arrays in structs).
+* 
+*                Requires a TOTAL_CHANNELS definition of 2 (stereo). Assumes an
+*                interleaved stereo PCM input in the input_buffer array.
+* 
 *  DATE:         18th April 2022
 *******************************************************************************/
 
@@ -23,9 +27,7 @@
 #define SCALEROOM       0.28
 #define STEREOSPREAD    23
 #define OFFSETROOM      0.7
-
 #define FREEZEMODE      0.5
-#define TOTAL_CHANNELS  2
 
 float comb_feedback    [TOTAL_CHANNELS][NUMCOMBS];
 float comb_filterstore [TOTAL_CHANNELS][NUMCOMBS];
@@ -104,7 +106,7 @@ static void reverb_update()
 	}
 }
 
-void reverb_process(float *input_buffer, int input_length, float v_width, float v_dry, float v_wet, float v_damp, float v_room)
+void apply_reverb(float *input_buffer, int input_length, float v_width, float v_dry, float v_wet, float v_damp, float v_room)
 {
 	/*===== INITIALISE PARAMETERS =====*/
 

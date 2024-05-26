@@ -98,36 +98,3 @@ void wave_export(int16_t *input_buffer, uint32_t input_length)
 
 	fclose(output_wave_file);
 }
-
-#define DITHER_GAIN  5  // volume of dither noise
-
-void float_to_sixteen_bit(float *input_buffer_float, int16_t *input_buffer_int, uint32_t input_length)
-{
-	float loudest_sample = 0.0;
-	float current_sample = 0.0;
-	float multiplier     = 0.0;
-
-	for (uint32_t i = 0; i < TOTAL_SAMPLES; i++)
-	{
-		current_sample = fabs(input_buffer_float[i]);
-		if (current_sample > loudest_sample)
-			loudest_sample = current_sample;
-	}
-
-	#ifdef DEBUG
-		printf("Loudest sample: %f\n",loudest_sample);
-	#endif
-
-	multiplier = 32767.0 / loudest_sample;
-
-	for (uint32_t i = 0; i < TOTAL_SAMPLES; i++)
-		input_buffer_float[i] = input_buffer_float[i] * multiplier;
-
-
-	// squash down to 16-bit, add dither
-	for (uint32_t i = 0; i < TOTAL_SAMPLES; i++)
-	{
-		input_buffer_float [i] = input_buffer_float[i] + (noise(0) * DITHER_GAIN);
-		input_buffer_int   [i] = (int16_t)input_buffer_float[i];
-	}
-}

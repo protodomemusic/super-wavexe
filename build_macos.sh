@@ -2,17 +2,15 @@
 # This should really be ignored on commit but,
 # as there's no documentation for wavexe just
 # yet, it's helpful to see how this should be
-# used in conjunction with the mmml compiler.
+# used in conjunction with the 4ml compiler.
 
 # get rid of old stuff
 
 rm src/super-wavexe
 rm output.wav
 
-# note this will fail if you've just downloaded from the repository
-# you can ignore it though (unless you want to write your own music)
-python3 compiler/mega-mmml.py songs/default/default.4ml
-mv 4ml-data.h songs/default/
+python3 compiler/4ml-compiler.py songs/garlic-bread/input.4ml
+mv 4ml-data.h songs/garlic-bread/
 
 gcc src/super-wavexe.c -O3 -o src/super-wavexe -lm
 

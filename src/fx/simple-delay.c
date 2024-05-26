@@ -1,11 +1,15 @@
-/**************************************************************
+/*******************************************************************************
 *  FILENAME:     simple-delay.c
 *  DESCRIPTION:  Basic little stereo delay. Does the job.
 *
+*                Assumes an interleaved stereo PCM input in the input_buffer
+*                array.
+*
 *  DATE:         13th March 2022
-**************************************************************/
+*******************************************************************************/
 
-void delay_process(float *input_buffer, uint32_t input_length, uint32_t delay_time, float delay_feedback, float delay_spread, uint8_t delay_direction, float delay_volume)
+void apply_delay(float *input_buffer, uint32_t input_length,   uint32_t delay_time, float delay_feedback,
+                 float delay_spread,  uint8_t delay_direction, float delay_volume)
 {
 	float *delay_buffer     = (float*)calloc(delay_time * 2, sizeof(float)); // x2 because stereo
 	float *input_buffer_wet = (float*)calloc(input_length, sizeof(float));

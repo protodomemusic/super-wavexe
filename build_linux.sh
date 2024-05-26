@@ -11,7 +11,7 @@ rm output.wav
 
 # note this will fail if you've just downloaded from the repository
 # you can ignore it though (unless you want to write your own music)
-python3 compiler/mega-mmml.py songs/default/default.4ml
+python3 compiler/4ml-compiler.py songs/default/input.4ml
 mv 4ml-data.h songs/default/
 
 gcc src/super-wavexe.c -O3 -o src/super-wavexe -lm -lasound

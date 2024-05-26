@@ -1,0 +1,72 @@
+%YAML 1.2
+---
+# http://www.sublimetext.com/docs/syntax.html
+name: 4ML
+file_extensions:
+  - 4ml
+scope: source.4ml
+
+# Define Patterns for Comments and Metadata
+contexts:
+  main:
+    - include: comments
+    - include: commands
+
+  comments:
+    - match: ';.*$'
+      scope: comment.line.semicolon.4ml
+    - match: '/\*'
+      scope: punctuation.definition.comment.begin.4ml
+      push: multi-line-comment
+
+  multi-line-comment:
+    - meta_scope: comment.block.4ml
+    - match: '\*/'
+      scope: punctuation.definition.comment.end.4ml
+      pop: true
+    - match: '.*?(?=\*/)'
+
+# Define Command Patterns
+  commands:
+    - match: '(C|P|p|\[|\]|s|o|v|t|i|@|K|F)\b<\d{1,3}>'
+      captures:
+        1: keyword.control.4ml
+        2: constant.numeric.4ml
+    - match: '[&^<>]'
+      scope: keyword.operator.4ml
+
+# Pattern and Channel Definitions and Invocations
+    - match: '[pP]\d{1,3}'
+      scope: variable.function.4ml
+    - match: '[C]\d{1,3}'
+      scope: variable.function.4ml
+    - match: '[\[]\d{1,3}'
+      scope: keyword.parameter.loop-start.4ml
+    - match: '\]'
+      scope: keyword.parameter.loop-end.4ml
+
+# Octave, Volume, Panning, and Tempo
+    - match: 'o\d{1,2}'
+      scope: keyword.operator.octave.4ml
+    - match: 'v\d{1,2}'
+      scope: keyword.operator.volume.4ml
+    - match: 't\d{1,3}'
+      scope: keyword.parameter.tempo.4ml
+    - match: 's-?\d{1,3}'
+      scope: keyword.parameter.panning.4ml
+
+# Tie, Slur, Instrument, Transpose, and Miscellaneous Functions
+    - match: '[&^]'
+      scope: keyword.operator.tie.4ml
+    - match: '@\d{1,3}'
+      scope: keyword.parameter.instrument.4ml
+    - match: 'i\d{1,3}'
+      scope: keyword.parameter.instrument.4ml
+    - match: 'K-?\d{1,3}'
+      scope: keyword.parameter.transpose.4ml
+    - match: 'F\d{1,3}'
+      scope: keyword.parameter.function.4ml
+
+# Note Duration
+    - match: '(?<=\D)(1|2|4|8|16|32|64|128|256)\.?'
+      scope: constant.numeric.duration.4ml
